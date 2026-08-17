@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build outputs
+dist/
+build/
+*.tsbuildinfo
+apps/api/dist/
+apps/desktop/dist/
+apps/desktop/src-tauri/target/
+
+# env — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# local storage
+storage/
+!storage/.gitkeep
+
+# logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/*.local
+*.swp
+
+# expo / native
+apps/mobile/.expo/
+apps/mobile/ios/
+apps/mobile/android/
+apps/mobile/web-build/

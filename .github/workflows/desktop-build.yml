@@ -1,0 +1,64 @@
+name: Desktop Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/desktop/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'packages/**'
+  workflow_dispatch:
+
+jobs:
+  tauri-build:
+    name: Build Flowbyte Desktop (Windows)
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm -r --filter "@flowbyte/*" --filter "!@flowbyte/desktop" run build
+
+      - name: Lint & typecheck API
+        run: pnpm --filter @flowbyte/api lint
+
+      - name: Build desktop frontend
+        run: pnpm --filter @flowbyte/desktop run build
+
+      - name: Build Tauri app
+        run: pnpm --filter @flowbyte/desktop tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flowbyte-desktop-windows
+          path: apps/desktop/src-tauri/target/release/bundle/nsis/*.exe

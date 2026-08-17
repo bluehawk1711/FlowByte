@@ -1,0 +1,15 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+onlyBuiltDependencies:
+  - sharp
+  - esbuild
+  - "@tailwindcss/oxide"
+  - unrs-resolver
+allowBuilds:
+  '@scarf/scarf': true
+  electron: true
+  esbuild: set this to true or false
+  sharp: set this to true or false
+  unrs-resolver: true

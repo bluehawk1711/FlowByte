@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: flowbyte-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: flowbyte
+      POSTGRES_PASSWORD: flowbyte
+      POSTGRES_DB: flowbyte
+    ports:
+      - "5432:5432"
+    volumes:
+      - flowbyte_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flowbyte"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  flowbyte_pgdata:

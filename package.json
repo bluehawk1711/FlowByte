@@ -1,0 +1,15 @@
+{
+  "name": "flowbyte",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Flowbyte — private self-hosted personal music library and streaming system",
+  "scripts": {
+    "build": "pnpm -r --filter \"@flowbyte/*\" build",
+    "typecheck": "pnpm -r --filter \"@flowbyte/*\" typecheck",
+    "lint": "pnpm -r --filter \"@flowbyte/*\" lint"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.5.0"
+}
