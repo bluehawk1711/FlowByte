@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { AudioPro, AudioProState, useAudioPro } from "react-native-audio-pro";
+import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 
 type MiniPlayerProps = {
   showHeart?: boolean;
@@ -55,10 +56,11 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
     return null;
   }
   return (
-    <Pressable
-      style={[styles.container, { backgroundColor: colors.bg }]}
-      onPress={() => router.push("/playing")}
-    >
+    <Animated.View entering={FadeInDown.duration(260)} exiting={FadeOutDown.duration(200)}>
+      <Pressable
+        style={[styles.container, { backgroundColor: colors.bg }]}
+        onPress={() => router.push("/playing")}
+      >
       <View style={styles.leftSection}>
         {song.cover ? (
           <Image source={{ uri: song.cover }} style={styles.albumArt} />
@@ -118,7 +120,8 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
           />
         </Pressable>
       </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 };
 

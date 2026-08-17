@@ -157,6 +157,9 @@ Auth: JWT access + refresh tokens (separate secrets), guards via @nestjs/jwt. Al
 - Queue stays client-side. Favorites/playlists/history/playback position sync through API.
 - Preserve existing UI, controls, notification/lock-screen controls, background playback.
 - Settings gains a "Flowbyte Cloud" section: API URL, sign in/up (JWT via `api-client`), manual sync, sign out.
+- Cloud tab: browse/search cloud library, play (stream or offline), favorite, download for offline. Downloads screen: offline list, play/remove/clear.
+- Animations: Reanimated entrance/exit for mini player + staggered list rows + heart pop — additive only.
+- Audio engine stays `react-native-audio-pro` (notification next/prev controls + remote events; expo-audio lacks both).
 
 ## Duplicate Detection
 

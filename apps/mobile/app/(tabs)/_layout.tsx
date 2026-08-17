@@ -53,6 +53,26 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="cloud/index"
+        options={{
+          title: "Cloud",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "cloud" : "cloud-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      {/* Hidden screen for offline downloads */}
+      <Tabs.Screen
+        name="downloads/index"
+        options={{
+          href: null,
+        }}
+      />
       {/* Hidden screen for folder music list */}
       <Tabs.Screen
         name="folders/[id]/index"
