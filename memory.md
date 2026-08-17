@@ -48,7 +48,7 @@ Persistent project memory. Updated as tasks complete. Supersedes stale assumptio
 - Root git repo: `https://github.com/bluehawk1711/FlowByte.git`, branch main. Mobile app was folded in from its nested repo (gitlink) — original history preserved locally at `apps/music-player/.git.bak` (gitignored) and still on GitHub at `gourav-1711/music-player-react-native`.
 - `apps/api/.env` (gitignored) now has the Neon pooled URL; `pnpm --filter @flowbyte/api db:migrate` applied the 0000 migration; API boots (`/api/docs` 200) against Neon. pg warns `sslmode=require` is treated as verify-full — harmless.
 - `desktop-build.yml`: manual only (`workflow_dispatch`), input `build_type: dev|release`. Dev → `tauri build --debug --no-bundle` (raw exe artifact); Release → full NSIS installer.
-- `mobile-build.yml`: manual only, inputs `build_type: dev|release` + `platform: android|ios|all`. Uses EAS profiles development/production (eas.json, projectId 4514ea6e-…). Requires repo secret `EXPO_TOKEN` (from expo.dev/settings/access-tokens) or the build fails.
+- `mobile-build.yml`: manual only, input `build_type: dev|release`. **No EAS** — builds APK on the runner: `expo prebuild --platform android` (JDK 17 + Android SDK 35/NDK 27.1/cmake) → `gradlew assembleDebug` (dev) or `assembleRelease` (release, debug-signed so it installs). Artifacts: `app-debug.apk` / `app-release.apk`. No secrets required.
 - Mobile app legacy typecheck fixed (3 call sites: SongsScreen mock data typed as `NonNullable<Song>[]`, PlaylistDetailScreen unused prop, SettingsScreen optional props) — `npx tsc --noEmit` passes now.
 
 ## Key Decisions (recorded)
