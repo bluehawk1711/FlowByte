@@ -5,6 +5,19 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import history from "./history";
 import { zustandStorage } from "./storageAdapter";
+import { resolvePlaybackUrl } from "@/lib/playback";
+
+async function playResolved(song: NonNullable<Song>): Promise<void> {
+  const url = await resolvePlaybackUrl(song);
+  if (!url) return;
+  AudioPro.play({
+    id: song.id,
+    url,
+    title: song.title,
+    artist: song.artist || "unknown",
+    artwork: song.cover || "",
+  });
+}
 
 type audioContextState = {
   song: Song;
@@ -48,14 +61,7 @@ const useAudioContext = create<audioContextState>()(
         set({ song: resolvedSong, isPlaying: true });
         if (resolvedSong) {
           history.getState().setHistory(resolvedSong);
-
-          AudioPro.play({
-            id: resolvedSong.id,
-            url: resolvedSong.url,
-            title: resolvedSong.title,
-            artist: resolvedSong.artist || "unknown",
-            artwork: resolvedSong.cover || "",
-          });
+          playResolved(resolvedSong);
         }
       },
       clearSong: () => {

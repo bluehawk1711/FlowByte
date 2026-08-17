@@ -10,6 +10,7 @@ import "react-native-reanimated";
 import { setupAudio } from "@/constants/audioConfig";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAudioLifecycle } from "@/hooks/useAudioLifecycle";
+import { useApiSync } from "@/hooks/useApiSync";
 import { setStyle } from "expo-navigation-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -27,6 +28,9 @@ export default function RootLayout() {
 
   // Initialize audio lifecycle listeners
   useAudioLifecycle();
+
+  // Initialize API client + cloud sync (favorites/playlists/playback)
+  useApiSync();
 
   useEffect(() => {
     setStyle("auto");

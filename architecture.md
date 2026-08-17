@@ -127,6 +127,13 @@ Key constraints:
 - Existing player untouched at core: `AudioPro` + zustand stores.
 - Additive: `api-client` integration, auth store, hybrid source resolution (`local:` prefix = downloaded file URI; `api:` = stream via signed URL), offline download manager (expo-file-system), sync services (favorites/playlists/history/playback).
 - `Song` type extended (fields: `source`, `artworkUrl`, `streamUrl`, `isDownloaded`, `localUri`, `downloadStatus`, `albumId`, `artistId`) while keeping playback fields compatible.
+- **Implemented (Phase 7):** `lib/api.ts` (client singleton, AsyncStorage `TokenStorage`, stable deviceId `fb-mobile-*`, runtime-switchable API URL), `lib/playback.ts` `resolvePlaybackUrl()` (offline file → API stream), `lib/offline.ts` (download manager on expo-file-system v19 new API — legacy FS API throws at runtime), `lib/sync.ts` (`api:<uuid>` id namespacing, favorites push + server playlist pull, playback position push every 12s via `useApiSync`), Settings "Flowbyte Cloud" section (sign in/register/sync/sign out + API URL). Remaining: cloud catalog browsing UI + downloads UI + removing the legacy nested `build-android.yml`.
+
+## Caching (Phase 11 — Upstash Redis)
+
+- Read-through cache via NestJS cache-manager wired to Upstash Redis (`REDIS_URL`, optional).
+- Candidates: song/artist/album lists, search results, artist/album detail, stream-URL resolution. TTL-based expiry; explicit invalidation on writes (cache-manager `del` in the write paths of the relevant modules).
+- PostgreSQL remains the source of truth; cache is disabled entirely when `REDIS_URL` is unset (no behavior change).
 
 ## Error Handling
 
@@ -147,4 +154,4 @@ PORT=3001             # API port (desktop app does not own a port)
 
 ## Out of Scope (v1)
 
-Lyrics translation, AI recommendations, advanced search infra, microservices, Redis everywhere.
+Lyrics translation, AI recommendations, advanced search infra, microservices, Redis everywhere (cache only — PostgreSQL stays the source of truth).

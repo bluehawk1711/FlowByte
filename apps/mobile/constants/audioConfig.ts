@@ -8,6 +8,7 @@ import { getSongCover } from "@/utils/imageUtils";
 
 import useAudioContext from "../hooks/store/audioContext";
 import { useSettingsStore } from "../hooks/store/settingsStore";
+import { resolvePlaybackUrl } from "@/lib/playback";
 
 // Configure audio settings
 AudioPro.configure({
@@ -53,16 +54,14 @@ export const setupAudio = async () => {
   if (song) {
     const resolvedSong = { ...song, cover: getSongCover(song) };
 
-    // Setting the song in the store might redundant if validation hasn't changed,
-    // but ensures consistency with the resolved cover.
-    // However, calling setSong might trigger other effects or play automatically if not careful.
-    // The previous hook called setSong(song) but commented it out?
-    // Actually lines 42 "setSong(song)" was commented.
-    // But it CALLED AudioPro.play directly.
+    // Resolve the playback URL (local file first, then API stream) so
+    // resume-on-startup works for cloud songs too.
+    const url = await resolvePlaybackUrl(resolvedSong);
+    if (!url) return;
 
     AudioPro.play({
       id: resolvedSong.id,
-      url: resolvedSong.url,
+      url,
       title: resolvedSong.title,
       artist: resolvedSong.artist || "unknown",
       artwork: resolvedSong.cover || "",

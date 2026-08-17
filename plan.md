@@ -65,7 +65,7 @@ flowbyte/
 | Mobile | Existing Expo SDK 54 app (react-native-audio-pro), extended with API client |
 | Audio tools | yt-dlp + FFmpeg (bundled binaries, spawned from Rust via std::process::Command) |
 | Image | Sharp (in API for artwork optimization) |
-| Optional cache | Upstash Redis (only where useful; keep minimal) |
+| Optional cache | **Upstash Redis** (Phase 11) — read-through cache for library listings, search results, artist/album aggregates, stream-URL short-circuit. PostgreSQL stays the source of truth; cache is invalidated on writes |
 
 ## Existing Code Inspection (Phase 1 — COMPLETE)
 
@@ -153,9 +153,10 @@ Auth: JWT access + refresh tokens (separate secrets), guards via @nestjs/jwt. Al
 ## Mobile (apps/mobile) — Hybrid Playback
 
 - Song requested → local file exists? YES → play local : NO → stream signed URL.
-- Offline downloads via expo-file-system into app documents dir; local metadata table (songId, localPath, downloaded, downloadedAt, fileSize).
+- Offline downloads via expo-file-system into app documents dir; local metadata table (songId, localPath, downloaded, downloadedAt, fileSize) in AsyncStorage.
 - Queue stays client-side. Favorites/playlists/history/playback position sync through API.
 - Preserve existing UI, controls, notification/lock-screen controls, background playback.
+- Settings gains a "Flowbyte Cloud" section: API URL, sign in/up (JWT via `api-client`), manual sync, sign out.
 
 ## Duplicate Detection
 
@@ -176,20 +177,24 @@ Auth: JWT access + refresh tokens (separate secrets), guards via @nestjs/jwt. Al
 ## Implementation Order (Phases)
 
 1. ~~Inspect existing code~~ (DONE — see above)
-2. Monorepo setup (pnpm workspace, packages)
-3. Backend: DB schema + storage abstraction + auth + library modules
-4. Local storage first, then B2 (same interface)
-5. Desktop Tauri app (new; port Electron logic to Rust commands)
-6. Upload pipeline (yt-dlp → FFmpeg → Sharp → lyrics → storage → DB)
-7. Mobile integration (API library, hybrid playback, offline)
-8. Library features (favorites, playlists, search, history, downloads)
-9. Lyrics system (providers, parsing, normalization, UI)
-10. Playback synchronization (state, resume, devices)
-11. Optimization (Redis cache where useful, indexes, concurrency)
+2. ~~Monorepo setup~~ (DONE)
+3. ~~Backend: DB schema + storage abstraction + auth + library modules~~ (DONE — verified against Neon)
+4. ~~Local storage first, then B2~~ (DONE)
+5. ~~Desktop Tauri app~~ (DONE — Rust + React; builds via GitHub Actions dev/release)
+6. ~~Upload pipeline (yt-dlp → FFmpeg → Sharp → lyrics → storage → DB)~~ (DONE)
+7. Mobile integration (API library, hybrid playback, offline) — 🔄 IN PROGRESS
+8. ~~Library features (API)~~ (DONE — client UI shipped in desktop; mobile list/sync additive)
+9. ~~Lyrics system (providers, parsing, normalization)~~ (DONE — desktop lyrics view small follow-up)
+10. ~~Playback synchronization (state, resume, devices)~~ (DONE — desktop pushes; mobile pusher in Phase 7)
+11. Optimization — **Upstash Redis read-through cache**:
+    - `@nestjs/cache-manager` + Upstash (REST/ioredis) wired in the API
+    - Cache: songs/artists/albums list responses, search results, artist/album detail, stream-URL resolution; TTL-based + explicit invalidation on create/update/delete
+    - Fallback: if `REDIS_URL` is unset, cache manager is disabled (no behavior change)
+12. ~~GitHub Actions CI (desktop + mobile, manual dev/release)~~ (DONE)
 
 ## Deferred (NOT now)
 
-Lyrics translation, AI recommendations, advanced search infra, microservices, Redis-everywhere, multi-backend services.
+Lyrics translation, AI recommendations, advanced search infra, microservices, SMTC media controls (Windows) until after v1.
 
 ## Constraints
 

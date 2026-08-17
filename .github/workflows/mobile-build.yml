@@ -52,21 +52,21 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck mobile app
-        working-directory: apps/music-player
+        working-directory: apps/mobile
         run: npx tsc --noEmit
 
       - name: Prebuild native android project
-        working-directory: apps/music-player
+        working-directory: apps/mobile
         run: npx expo prebuild --platform android --non-interactive --no-install
 
       - name: Build debug APK
         if: github.event.inputs.build_type == 'dev'
-        working-directory: apps/music-player/android
+        working-directory: apps/mobile/android
         run: ./gradlew assembleDebug
 
       - name: Build release APK
         if: github.event.inputs.build_type == 'release'
-        working-directory: apps/music-player/android
+        working-directory: apps/mobile/android
         run: ./gradlew assembleRelease
 
       - name: Upload debug APK
@@ -74,11 +74,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flowbyte-mobile-debug-apk
-          path: apps/music-player/android/app/build/outputs/apk/debug/app-debug.apk
+          path: apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload release APK
         if: github.event.inputs.build_type == 'release'
         uses: actions/upload-artifact@v4
         with:
           name: flowbyte-mobile-release-apk
-          path: apps/music-player/android/app/build/outputs/apk/release/app-release.apk
+          path: apps/mobile/android/app/build/outputs/apk/release/app-release.apk

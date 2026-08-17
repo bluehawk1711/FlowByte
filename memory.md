@@ -6,7 +6,7 @@ Persistent project memory. Updated as tasks complete. Supersedes stale assumptio
 
 - **Name:** Flowbyte — private, self-hosted personal music library & streaming system.
 - **Monorepo:** pnpm workspaces, TypeScript strict.
-- **Repo root:** `D:\side-projects\Apps\my-music-player` (no git repo at root yet — each legacy app carries its own `.git`).
+- **Repo root:** `D:\side-projects\Apps\my-music-player` — git repo at root (`github.com/bluehawk1711/FlowByte`, branch main). Legacy apps folded in; original nested git history moved aside (see below).
 
 ## Current Status (updated as work completes)
 
@@ -19,17 +19,20 @@ Persistent project memory. Updated as tasks complete. Supersedes stale assumptio
 | 5. Desktop Tauri app (Rust) | ✅ DONE (compiles only in CI — no MSVC toolchain locally; Git link.exe shadows PATH) |
 | 5b. Desktop React frontend | ✅ DONE (auth, home/downloader, library, downloads, settings, hybrid player, mini overlay) |
 | 6. Upload pipeline (API + desktop music.rs) | ✅ DONE (API + Rust pipeline; React upload flow part of 5b) |
-| 7. Mobile integration | ⏳ PENDING |
+| 7. Mobile integration | 🔄 IN PROGRESS — API client wired (client singleton, AsyncStorage tokens/deviceId, apiUrl), hybrid playback resolution (local file → API stream), offline downloads (expo-file-system v19 new API), favorites/playlists sync, playback position push (12s), Settings "Flowbyte Cloud" (API URL, sign in/up, sync now, sign out), root layout hook. **Not yet: cloud catalog UI (Songs tab), downloads UI, remove legacy build-android.yml** |
 | 8. Library features (API) | ✅ DONE (client UI part of 5b/7) |
 | 9. Lyrics (API) | ✅ DONE (client UI part of 5b/7) |
 | 10. Playback sync (API) | ✅ DONE (client push part of 5b/7) |
-| 11. Optimization | ⏳ PENDING |
+| 11. Optimization | ⏳ PENDING — **Upstash Redis** read-through cache (library lists, search, artist/album detail, stream-URL short-circuit; TTL + invalidation on writes; disabled when REDIS_URL unset) |
 | 12. GitHub Actions CI | ✅ DONE (desktop-build.yml + mobile-build.yml, both manual dev/release) |
 | 13. Database (Neon) | ✅ DONE — migrations applied, API boots against Neon, Swagger verified |
 
 ## Decisions added since initial write
 
 - **Desktop hybrid playback:** same as mobile — play local files (via Tauri `convertFileSrc`) OR API stream URLs through one HTML5 `<audio>` PlayerContext. `SongSource = 'api' | 'local'` shared resolution.
+- **Mobile hybrid playback:** `lib/playback.ts resolvePlaybackUrl()` — offline download exists → local `file://` URI; else API `getStreamUrl()`. `audioContext.setSong` and `setupAudio` (resume-on-startup) both resolve before `AudioPro.play`.
+- **Upstash Redis for caching (Phase 11):** read-through cache via NestJS cache-manager; PostgreSQL stays source of truth; `REDIS_URL` env; cache disabled when unset.
+- **Mobile API naming:** api song ids namespaced `api:<uuid>` (matches the `local:`/`api:` no-collision decision); `apiSongId` carries the server id; mobile `Song` extended with optional api fields (additive — legacy local playback untouched).
 - **Mini-player overlay (Windows):** second frameless transparent window, always-on-top + skip-taskbar, opened from player UI. In plan (post-frontend).
 - **Windows media controls:** SMTC via `windows` crate is the chosen path — NOT now. `tauri-plugin-notification` has no Windows action-button support, so notifications-with-controls is out of v1 scope.
 - **Rust local builds:** NOT possible on dev machine (no VS Build Tools; `C:\Program Files\Git\usr\bin\link.exe` shadows MSVC `link.exe`; vswhere finds no VS installs). All Rust verification goes through GitHub Actions (windows-latest, MSVC).
@@ -43,9 +46,16 @@ Persistent project memory. Updated as tasks complete. Supersedes stale assumptio
 - `packages/api-client` gained raw upload methods (`uploadAudio`/`uploadArtwork`/`uploadLyrics`) for the desktop pipeline.
 - Body is transparent (`index.css`) so the mini window's rounded corners show; main window chrome provides its own bg.
 
+## Mobile integration notes (Phase 7, in progress)
+
+- **Renamed:** `apps/music-player` → `apps/mobile` (`git mv`); `.github/workflows/mobile-build.yml` paths updated. Legacy nested workflow `apps/mobile/.github/workflows/build-android.yml` still tracked — delete when cloud UI lands.
+- **New files:** `lib/api.ts` (FlowbyteClient singleton + AsyncStorage `TokenStorage` + stable deviceId `fb-mobile-*` + apiUrl stored under `flowbyte.apiUrl`, settable at runtime via `setApiUrl`), `lib/playback.ts` (hybrid URL resolution, `canPlayOffline`), `lib/offline.ts` (download manager — **expo-file-system v19 new API** `File`/`Directory`/`Paths`; legacy `documentDirectory`/`createDownloadResumable` were removed from the main entrypoint and the old API **throws at runtime**), `lib/sync.ts` (`toMobileSong` mapper, two-way favorites push, server playlist pull, `syncPlayback`/`recordApiPlay`), `hooks/useApiSync.ts` (root hook: init client, register device, auto-sync + on-app-active, 12s interval for play-record + position push).
+- **Modified (additive):** `constants/types.ts` Song extended (source/apiSongId/artworkUrl/streamUrl/isDownloaded/localUri/downloadStatus/albumId/artistId/isFavorite); `audioContext.ts` + `audioConfig.ts` resolve URL before `AudioPro.play`; `SettingsScreen.tsx` "FLOWBYTE CLOUD" section (signed-in state, Sync Now, Sign Out, modal with API URL + sign in/register via `client.login`/`client.register`); `app/_layout.tsx` mounts `useApiSync()`.
+- Register requires a valid email (RegisterDto `@IsEmail`); username derived from email prefix.
+
 ## CI / repo / DB notes
 
-- Root git repo: `https://github.com/bluehawk1711/FlowByte.git`, branch main. Mobile app was folded in from its nested repo (gitlink) — original history preserved locally at `apps/music-player/.git.bak` (gitignored) and still on GitHub at `gourav-1711/music-player-react-native`.
+- Root git repo: `https://github.com/bluehawk1711/FlowByte.git`, branch main. Mobile app was folded in from its nested repo (gitlink) — original history preserved locally at `apps/mobile/.git.bak` (gitignored) and still on GitHub at `gourav-1711/music-player-react-native`.
 - `apps/api/.env` (gitignored) now has the Neon pooled URL; `pnpm --filter @flowbyte/api db:migrate` applied the 0000 migration; API boots (`/api/docs` 200) against Neon. pg warns `sslmode=require` is treated as verify-full — harmless.
 - `desktop-build.yml`: manual only (`workflow_dispatch`), input `build_type: dev|release`. Dev → `tauri build --debug --no-bundle` (raw exe artifact); Release → full NSIS installer.
 - `mobile-build.yml`: manual only, input `build_type: dev|release`. **No EAS** — builds APK on the runner: `expo prebuild --platform android` (JDK 17 + Android SDK 35/NDK 27.1/cmake) → `gradlew assembleDebug` (dev) or `assembleRelease` (release, debug-signed so it installs). Artifacts: `app-debug.apk` / `app-release.apk`. No secrets required.
@@ -73,9 +83,9 @@ Persistent project memory. Updated as tasks complete. Supersedes stale assumptio
 - Only `backend/bin/win/{yt-dlp.exe, ffmpeg.exe}` exist (no mac/linux).
 - Backend port 3000 hardcoded in 2 frontend files.
 
-### apps/music-player (React Native — becomes apps/mobile)
+### apps/mobile (React Native)
 
-- Expo SDK 54, expo-router, RN 0.81.5, react-native-audio-pro v10 (AudioPro singleton), zustand v5, TypeScript.
+- Expo SDK 54, expo-router, RN 0.81.5, react-native-audio-pro v10 (AudioPro singleton), zustand v5, TypeScript. Workspace deps now include `@flowbyte/api-client`, `@flowbyte/types`, `@flowbyte/config`.
 - Songs 100% local via `expo-media-library`; `Song.url` = `file://` URI → `AudioPro.play({id,url,title,artist,artwork})`.
 - Song type: `{ id, title, artist?, album?, duration, cover?, url } | null` (nullable union!) in `constants/types.ts`.
 - Stores in `hooks/store/`: audioContext (song/playlist/shuffle/repeat/lastPosition + playNext/playPrevious/playList/setSong), playlist, favourite, history, settingsStore, selectionStore, songMetadata, storageAdapter. Persisted via AsyncStorage (`audio-storage`, `playlist-storage`, `favourite-storage`, `history-storage`, `settings-storage`, `song-metadata`).

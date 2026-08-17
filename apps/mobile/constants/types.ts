@@ -6,6 +6,17 @@ type Song = {
   duration: number;
   cover?: string;
   url: string;
+  // --- Flowbyte API additions (optional, additive) ---
+  source?: "api" | "local";
+  apiSongId?: string; // server-side song id when source === "api"
+  artworkUrl?: string;
+  streamUrl?: string;
+  isDownloaded?: boolean;
+  localUri?: string;
+  downloadStatus?: "none" | "downloading" | "downloaded" | "error";
+  albumId?: string;
+  artistId?: string;
+  isFavorite?: boolean;
 } | null;
 
 type PlaylistObj = {
