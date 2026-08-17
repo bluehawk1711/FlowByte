@@ -1,22 +1,20 @@
 name: Desktop Build
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/desktop/**'
-      - 'packages/**'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-  pull_request:
-    paths:
-      - 'apps/desktop/**'
-      - 'packages/**'
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - dev
+          - release
 
 jobs:
   tauri-build:
-    name: Build Flowbyte Desktop (Windows)
+    name: Tauri ${{ github.event.inputs.build_type }} (Windows)
     runs-on: windows-latest
 
     steps:
@@ -51,14 +49,24 @@ jobs:
       - name: Build desktop frontend
         run: pnpm --filter @flowbyte/desktop run build
 
-      - name: Build Tauri app
-        run: pnpm --filter @flowbyte/desktop tauri build
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      - name: Build Tauri app (dev)
+        if: github.event.inputs.build_type == 'dev'
+        run: pnpm --filter @flowbyte/desktop tauri build --debug --no-bundle
 
-      - name: Upload installer artifact
+      - name: Build Tauri app (release)
+        if: github.event.inputs.build_type == 'release'
+        run: pnpm --filter @flowbyte/desktop tauri build
+
+      - name: Upload dev binary
+        if: github.event.inputs.build_type == 'dev'
         uses: actions/upload-artifact@v4
         with:
-          name: flowbyte-desktop-windows
+          name: flowbyte-desktop-dev-win-x64
+          path: apps/desktop/src-tauri/target/debug/*.exe
+
+      - name: Upload release installer
+        if: github.event.inputs.build_type == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: flowbyte-desktop-release-win-x64
           path: apps/desktop/src-tauri/target/release/bundle/nsis/*.exe

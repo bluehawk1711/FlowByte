@@ -1,0 +1,66 @@
+name: Mobile Build (EAS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - dev
+          - release
+      platform:
+        description: 'Platform'
+        required: true
+        default: 'android'
+        type: choice
+        options:
+          - android
+          - ios
+          - all
+
+jobs:
+  eas-build:
+    name: EAS ${{ github.event.inputs.build_type }} (${{ github.event.inputs.platform }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck mobile app
+        working-directory: apps/music-player
+        run: npx tsc --noEmit
+
+      - name: Build (dev profile)
+        if: github.event.inputs.build_type == 'dev'
+        working-directory: apps/music-player
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli build --platform ${{ github.event.inputs.platform }} --profile development --non-interactive --no-wait
+
+      - name: Build (production profile)
+        if: github.event.inputs.build_type == 'release'
+        working-directory: apps/music-player
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli build --platform ${{ github.event.inputs.platform }} --profile production --non-interactive --no-wait
+
+      - name: Build link
+        run: |
+          echo "Build triggered. Status + install links:"
+          echo "https://expo.dev/accounts/<your-eas-account>/projects/music-player/builds"
+          echo "Requires the EXPO_TOKEN repository secret (from https://expo.dev/settings/access-tokens)."

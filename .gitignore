@@ -15,6 +15,10 @@ apps/desktop/src-tauri/target/
 .env.local
 .env.*.local
 
+# local git backups (nested repo history kept out of the monorepo)
+.git.bak
+.git.bak/
+
 # local storage
 storage/
 !storage/.gitkeep

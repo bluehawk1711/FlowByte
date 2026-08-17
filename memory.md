@@ -24,7 +24,8 @@ Persistent project memory. Updated as tasks complete. Supersedes stale assumptio
 | 9. Lyrics (API) | ✅ DONE (client UI part of 5b/7) |
 | 10. Playback sync (API) | ✅ DONE (client push part of 5b/7) |
 | 11. Optimization | ⏳ PENDING |
-| 12. GitHub Actions CI | ✅ DONE (desktop-build.yml; needs git init + push to GitHub) |
+| 12. GitHub Actions CI | ✅ DONE (desktop-build.yml + mobile-build.yml, both manual dev/release) |
+| 13. Database (Neon) | ✅ DONE — migrations applied, API boots against Neon, Swagger verified |
 
 ## Decisions added since initial write
 
@@ -41,6 +42,14 @@ Persistent project memory. Updated as tasks complete. Supersedes stale assumptio
 - Vite gotcha: workspace packages are CJS; needed `build.commonjsOptions.include: [/node_modules/, /packages\//]` in `vite.config.ts` or Rollup fails on `defaultApiUrl`.
 - `packages/api-client` gained raw upload methods (`uploadAudio`/`uploadArtwork`/`uploadLyrics`) for the desktop pipeline.
 - Body is transparent (`index.css`) so the mini window's rounded corners show; main window chrome provides its own bg.
+
+## CI / repo / DB notes
+
+- Root git repo: `https://github.com/bluehawk1711/FlowByte.git`, branch main. Mobile app was folded in from its nested repo (gitlink) — original history preserved locally at `apps/music-player/.git.bak` (gitignored) and still on GitHub at `gourav-1711/music-player-react-native`.
+- `apps/api/.env` (gitignored) now has the Neon pooled URL; `pnpm --filter @flowbyte/api db:migrate` applied the 0000 migration; API boots (`/api/docs` 200) against Neon. pg warns `sslmode=require` is treated as verify-full — harmless.
+- `desktop-build.yml`: manual only (`workflow_dispatch`), input `build_type: dev|release`. Dev → `tauri build --debug --no-bundle` (raw exe artifact); Release → full NSIS installer.
+- `mobile-build.yml`: manual only, inputs `build_type: dev|release` + `platform: android|ios|all`. Uses EAS profiles development/production (eas.json, projectId 4514ea6e-…). Requires repo secret `EXPO_TOKEN` (from expo.dev/settings/access-tokens) or the build fails.
+- Mobile app legacy typecheck fixed (3 call sites: SongsScreen mock data typed as `NonNullable<Song>[]`, PlaylistDetailScreen unused prop, SettingsScreen optional props) — `npx tsc --noEmit` passes now.
 
 ## Key Decisions (recorded)
 
