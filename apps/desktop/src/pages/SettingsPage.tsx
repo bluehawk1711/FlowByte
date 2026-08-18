@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { LogOut, Server } from 'lucide-react';
+import { LogOut, MonitorPlay, Server } from 'lucide-react';
 import { toast } from 'sonner';
 import { getSettings, saveSettings } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,7 @@ export function SettingsPage() {
   const [bitrate, setBitrate] = useState(String(getSettings().importBitrate));
   const [transcode, setTranscode] = useState(getSettings().importTranscode);
   const [notify, setNotify] = useState(getSettings().notifyOnComplete);
+  const [iframePreview, setIframePreview] = useState(getSettings().iframePreview);
 
   const save = useCallback(() => {
     saveSettings({
@@ -20,9 +21,10 @@ export function SettingsPage() {
       importBitrate: Math.min(320, Math.max(64, Number(bitrate) || 160)),
       importTranscode: transcode,
       notifyOnComplete: notify,
+      iframePreview,
     });
     toast.success('Settings saved');
-  }, [apiUrl, bitrate, transcode, notify]);
+  }, [apiUrl, bitrate, transcode, notify, iframePreview]);
 
   return (
     <div className="mx-auto max-w-xl space-y-6 p-6">
@@ -86,6 +88,30 @@ export function SettingsPage() {
               type="checkbox"
               checked={notify}
               onChange={(e) => setNotify(e.target.checked)}
+              className="h-4 w-4 accent-blue-600"
+            />
+          </label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MonitorPlay className="h-4 w-4" />
+            YouTube preview
+          </CardTitle>
+          <CardDescription>
+            Embed a YouTube iframe preview when analyzing a link, and when playing saved
+            videos. When enabled, the preview shows a download button.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
+            <span className="text-zinc-300">Show iframe preview (embed player)</span>
+            <input
+              type="checkbox"
+              checked={iframePreview}
+              onChange={(e) => setIframePreview(e.target.checked)}
               className="h-4 w-4 accent-blue-600"
             />
           </label>

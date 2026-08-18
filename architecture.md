@@ -128,11 +128,18 @@ Key constraints:
 - Additive: `api-client` integration, auth store, hybrid source resolution (`local:` prefix = downloaded file URI; `api:` = stream via signed URL), offline download manager (expo-file-system), sync services (favorites/playlists/history/playback).
 - `Song` type extended (fields: `source`, `artworkUrl`, `streamUrl`, `isDownloaded`, `localUri`, `downloadStatus`, `albumId`, `artistId`) while keeping playback fields compatible.
 - **Implemented (Phase 7):** `lib/api.ts` (client singleton, AsyncStorage `TokenStorage`, stable deviceId `fb-mobile-*`, runtime-switchable API URL), `lib/playback.ts` `resolvePlaybackUrl()` (offline file → API stream), `lib/offline.ts` (download manager on expo-file-system v19 new API — legacy FS API throws at runtime), `lib/sync.ts` (`api:<uuid>` id namespacing, favorites push + server playlist pull, playback position push every 12s via `useApiSync`), Settings "Flowbyte Cloud" section (sign in/register/sync/sign out + API URL). Cloud tab (browse/search/play/favorite/download) via `lib/cloud.ts` + `CloudSongRow`; Downloads screen for offline records. Reanimated entrance/exit animations (mini player slide, staggered rows, heart pop).
+
+## Desktop — Save YouTube for later (additive)
+
+- **Home page:** after analyzing a URL, "Save to playlist (play later)" — pick an existing saved playlist or create a new one. Stored locally (`flowbyte.savedPlaylists`, localStorage) — NOT server playlists (those hold library songs).
+- **Saved page** (`pages/SavedPage.tsx`, sidebar nav): saved playlists → items (YouTube video or playlist URL + metadata). Play = embedded iframe (`components/YouTubeEmbed.tsx` — `youtube-nocookie.com/embed/<videoId>` or `videoseries?list=<playlistId>`), which shows a **Download button** beneath it. Video items Import to library (`start_music_import`); playlist items run the classic MP3 playlist download (`start_download 'playlist'`).
+- **Settings:** `DesktopSettings.iframePreview` (default ON) — "Show iframe preview". OFF = no embed, download controls only.
+- URL parsing: `parseYouTubeUrl()` in `lib/utils.ts`. Zero Rust/API changes.
 - **Audio engine:** `react-native-audio-pro` retained — it provides notification-center next/prev controls + remote events (`REMOTE_NEXT`/`REMOTE_PREV`); `expo-audio` only offers lock-screen seek buttons and no remote events, so it can't replace it (unused `expo-audio` dep removed).
 
 ## Caching (Phase 11 — Upstash Redis)
 
-- **Implemented:** `src/cache/cache.module.ts` (global) + `cache.service.ts` — `@upstash/redis` REST client (`{ url, token }`), no-op when `REDIS_URL`/`REDIS_TOKEN` unset (boot logs "cache DISABLED").
+- **Implemented:** `src/cache/cache.module.ts` (global) + `cache.service.ts` — `@upstash/redis` REST client via `Redis.fromEnv()` (canonical env vars `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`), native JS auto-serialization, no-op when env unset (boot logs "cache DISABLED").
 - Key scheme (all keys prefixed `fb:`): `songs:list:{userId}:{q}:{artistId}:{albumId}:{genre}:{page}:{pageSize}` (TTL 60s), `songs:detail:{id}` (300s), `songs:stream:{id}` (TTL = stream TTL − 60s margin), `search:{q}` (60s), `artists:list`/`albums:list` (300s), `artists:detail:{id}`/`albums:detail:{id}` (300s), `playlists:list:{userId}`/`playlists:detail:{userId}:{id}` (120s).
 - Invalidation on writes: uploads `complete()` → `delByPrefix('songs:list')` + `search:` + `artists:list`/`albums:list`; lyrics import → `songs:detail:{id}`; favorites add/remove → `delByPrefix('songs:list:{userId}')`; playlist create/update/remove/addSong/removeSong/reorder → list + detail keys.
 - `delByPrefix` = SCAN(`fb:<prefix>*`, count 100) loop + DEL batch.
@@ -151,8 +158,8 @@ STORAGE_PROVIDER=local|backblaze
 LOCAL_STORAGE_PATH=../storage
 B2_ENDPOINT= B2_KEY_ID= B2_APPLICATION_KEY= B2_BUCKET=
 JWT_SECRET= JWT_REFRESH_SECRET=
-REDIS_URL=            # optional (Upstash REST URL)
-REDIS_TOKEN=          # optional (Upstash REST token)
+UPSTASH_REDIS_REST_URL=  # optional (Upstash REST URL)
+UPSTASH_REDIS_REST_TOKEN= # optional (Upstash REST token)
 PORT=3001             # API port (desktop app does not own a port)
 ```
 

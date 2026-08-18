@@ -9,6 +9,7 @@ const KEYS = {
   apiUrl: 'flowbyte.apiUrl',
   deviceId: 'flowbyte.deviceId',
   settings: 'flowbyte.settings',
+  savedPlaylists: 'flowbyte.savedPlaylists',
 };
 
 const localStorageStorage: TokenStorage = {
@@ -58,6 +59,8 @@ export interface DesktopSettings {
   importBitrate: number;
   importTranscode: boolean;
   notifyOnComplete: boolean;
+  /** Show an embedded YouTube iframe preview of pasted videos (with download button). */
+  iframePreview: boolean;
 }
 
 const DEFAULT_SETTINGS: DesktopSettings = {
@@ -65,6 +68,7 @@ const DEFAULT_SETTINGS: DesktopSettings = {
   importBitrate: 160,
   importTranscode: false,
   notifyOnComplete: true,
+  iframePreview: true,
 };
 
 export function getSettings(): DesktopSettings {
@@ -90,4 +94,77 @@ export async function resolvePlayUrl(song: Song): Promise<string> {
   if (song.streamUrl) return song.streamUrl;
   const { url } = await client.getStreamUrl(song.id);
   return url;
+}
+
+// ---------------------------------------------------------------------------
+// Saved YouTube playlists ("save a video/playlist to play later")
+// ---------------------------------------------------------------------------
+
+export interface SavedPlaylistItem {
+  id: string;
+  url: string;
+  videoId: string | null;
+  playlistId: string | null;
+  title: string;
+  thumbnail: string | null;
+  isPlaylist: boolean;
+  savedAt: string;
+}
+
+export interface SavedPlaylist {
+  id: string;
+  name: string;
+  createdAt: string;
+  items: SavedPlaylistItem[];
+}
+
+export function getSavedPlaylists(): SavedPlaylist[] {
+  const raw = localStorage.getItem(KEYS.savedPlaylists);
+  return raw ? (JSON.parse(raw) as SavedPlaylist[]) : [];
+}
+
+function persistSavedPlaylists(list: SavedPlaylist[]): void {
+  localStorage.setItem(KEYS.savedPlaylists, JSON.stringify(list));
+}
+
+export function createSavedPlaylist(name: string): SavedPlaylist {
+  const playlist: SavedPlaylist = {
+    id: `sp-${Date.now().toString(36)}`,
+    name: name.trim() || 'Saved',
+    createdAt: new Date().toISOString(),
+    items: [],
+  };
+  persistSavedPlaylists([...getSavedPlaylists(), playlist]);
+  return playlist;
+}
+
+export function deleteSavedPlaylist(id: string): void {
+  persistSavedPlaylists(getSavedPlaylists().filter((p) => p.id !== id));
+}
+
+export function addToSavedPlaylist(
+  playlistId: string,
+  item: Omit<SavedPlaylistItem, 'id' | 'savedAt'>,
+): void {
+  persistSavedPlaylists(
+    getSavedPlaylists().map((p) =>
+      p.id === playlistId
+        ? {
+            ...p,
+            items: [
+              { ...item, id: `si-${Date.now().toString(36)}`, savedAt: new Date().toISOString() },
+              ...p.items,
+            ],
+          }
+        : p,
+    ),
+  );
+}
+
+export function removeSavedItem(playlistId: string, itemId: string): void {
+  persistSavedPlaylists(
+    getSavedPlaylists().map((p) =>
+      p.id === playlistId ? { ...p, items: p.items.filter((i) => i.id !== itemId) } : p,
+    ),
+  );
 }

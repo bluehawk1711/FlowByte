@@ -1,8 +1,16 @@
-import { useCallback, useState } from 'react';
-import { Clapperboard, Download, Loader2, Music4, Search } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { Clapperboard, Download, ListPlus, Loader2, Music4, Search } from 'lucide-react';
+import { toast } from 'sonner';
 import type { VideoInfo } from '@flowbyte/types';
 import { useDownloads } from '../context/DownloadContext';
-import { formatDuration } from '../lib/utils';
+import { formatDuration, parseYouTubeUrl } from '../lib/utils';
+import {
+  addToSavedPlaylist,
+  createSavedPlaylist,
+  getSavedPlaylists,
+  getSettings,
+} from '../lib/api';
+import { YouTubeEmbed } from '../components/YouTubeEmbed';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -26,6 +34,12 @@ export function HomePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [playlistId, setPlaylistId] = useState<string>('');
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+
+  const parsed = useMemo(() => parseYouTubeUrl(url), [url]);
+  const iframePreview = getSettings().iframePreview;
+  const showPreview = iframePreview && info?.success && (parsed?.videoId || parsed?.playlistId);
 
   const runAnalyze = useCallback(
     async (value: string) => {
@@ -73,6 +87,36 @@ export function HomePage() {
     }
   };
 
+  const onSaveToPlaylist = () => {
+    if (!url || !info?.success || !parsed) return;
+    if (newPlaylistName.trim()) {
+      const created = createSavedPlaylist(newPlaylistName);
+      addToSavedPlaylist(created.id, {
+        url,
+        videoId: parsed.videoId,
+        playlistId: parsed.playlistId,
+        title: info.title,
+        thumbnail: info.thumbnail ?? null,
+        isPlaylist: parsed.isPlaylist,
+      });
+      setNewPlaylistName('');
+      setPlaylistId('');
+      toast.success(`Saved to new playlist “${created.name}”`);
+    } else if (playlistId) {
+      addToSavedPlaylist(playlistId, {
+        url,
+        videoId: parsed.videoId,
+        playlistId: parsed.playlistId,
+        title: info.title,
+        thumbnail: info.thumbnail ?? null,
+        isPlaylist: parsed.isPlaylist,
+      });
+      toast.success('Saved to playlist');
+    } else {
+      toast.error('Pick a playlist or enter a name for a new one');
+    }
+  };
+
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <div>
@@ -115,6 +159,28 @@ export function HomePage() {
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
+      {showPreview && (
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            <YouTubeEmbed videoId={parsed.videoId} playlistId={parsed.playlistId} />
+            <div className="flex flex-wrap gap-2">
+              <Button disabled={importing} onClick={() => void onImport()}>
+                <Music4 className="h-4 w-4" />
+                Download to library
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() => void onDownload('audio')}
+              >
+                <Download className="h-4 w-4" />
+                Download MP3
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {info && info.success && (
         <Card>
           <CardContent className="flex gap-4 p-4">
@@ -151,6 +217,44 @@ export function HomePage() {
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {info && info.success && (
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <ListPlus className="h-4 w-4" />
+              Save to playlist (play later)
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={playlistId}
+                onChange={(e) => setPlaylistId(e.target.value)}
+                className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-2 text-sm text-zinc-200"
+              >
+                <option value="">Existing playlist…</option>
+                {getSavedPlaylists().map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.items.length})
+                  </option>
+                ))}
+              </select>
+              <Input
+                className="w-44"
+                placeholder="…or new playlist name"
+                value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+              />
+              <Button variant="outline" onClick={onSaveToPlaylist}>
+                Save
+              </Button>
+            </div>
+            <p className="text-xs text-zinc-500">
+              Saved videos can be played later from the Saved page — with an embedded preview
+              and a download button.
+            </p>
           </CardContent>
         </Card>
       )}

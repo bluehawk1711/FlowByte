@@ -9,16 +9,18 @@ import {
   Square,
   X,
   Music2,
+  ListVideo,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
 import { NowPlayingBar } from './NowPlayingBar';
 
-export type Page = 'home' | 'library' | 'downloads' | 'settings';
+export type Page = 'home' | 'library' | 'saved' | 'downloads' | 'settings';
 
 const NAV: Array<{ page: Page; label: string; icon: typeof Home }> = [
   { page: 'home', label: 'Home', icon: Home },
   { page: 'library', label: 'Library', icon: Library },
+  { page: 'saved', label: 'Saved', icon: ListVideo },
   { page: 'downloads', label: 'Downloads', icon: Download },
   { page: 'settings', label: 'Settings', icon: Settings },
 ];

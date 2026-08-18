@@ -4,7 +4,8 @@ import { CacheService } from './cache.service';
 /**
  * Global caching module (Phase 11 — Upstash Redis).
  *
- * Enabled only when REDIS_URL + REDIS_TOKEN are set (Upstash REST config).
+ * Enabled only when UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are set
+ * (canonical Upstash env var names, read by `Redis.fromEnv()`).
  * When unset, CacheService is a no-op and behavior is unchanged.
  */
 @Global()

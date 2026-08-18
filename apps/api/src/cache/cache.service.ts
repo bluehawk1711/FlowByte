@@ -1,41 +1,33 @@
-import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from '@upstash/redis';
 
 export const CACHE_KEY_PREFIX = 'fb:';
 
-/** Redis-friendly JSON serialization (skips functions/undefined silently). */
-function safeStringify(value: unknown): string | null {
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Read-through cache backed by Upstash Redis (REST).
  *
- * - Disabled (no-op) when REDIS_URL/REDIS_TOKEN are not configured.
+ * - Enabled only when `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
+ *   are set (the canonical Upstash env var names, read via `Redis.fromEnv()`).
+ * - Disabled (no-op) otherwise — no behavior change without Redis.
  * - Keys are namespaced with `fb:` to stay isolated from other apps.
- * - Values are JSON strings; dates are NOT stored (API responses are
- *   JSON-safe after mapping).
+ * - Values use the SDK's automatic JSON serialization (native JS types).
  */
 @Injectable()
-export class CacheService implements OnModuleDestroy {
+export class CacheService {
   private readonly logger = new Logger(CacheService.name);
   private readonly client: Redis | null;
 
   constructor(config: ConfigService) {
-    const url = config.get<string>('REDIS_URL');
-    const token = config.get<string>('REDIS_TOKEN');
+    const url = config.get<string>('UPSTASH_REDIS_REST_URL');
+    const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN');
     if (url && token) {
-      this.client = new Redis({ url, token });
+      this.client = Redis.fromEnv();
       this.logger.log('Upstash Redis cache enabled');
     } else {
       this.client = null;
       this.logger.log(
-        'Upstash Redis cache DISABLED (set REDIS_URL + REDIS_TOKEN to enable)',
+        'Upstash Redis cache DISABLED (set UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN to enable)',
       );
     }
   }
@@ -47,9 +39,7 @@ export class CacheService implements OnModuleDestroy {
   async get<T>(key: string): Promise<T | null> {
     if (!this.client) return null;
     try {
-      const raw = await this.client.get(`${CACHE_KEY_PREFIX}${key}`);
-      if (raw === null) return null;
-      return JSON.parse(raw as string) as T;
+      return await this.client.get<T>(`${CACHE_KEY_PREFIX}${key}`);
     } catch (err) {
       this.logger.warn(`Cache get failed for ${key}: ${(err as Error).message}`);
       return null;
@@ -58,10 +48,8 @@ export class CacheService implements OnModuleDestroy {
 
   async set(key: string, value: unknown, ttlSeconds: number): Promise<void> {
     if (!this.client) return;
-    const serialized = safeStringify(value);
-    if (serialized === null) return;
     try {
-      await this.client.set(`${CACHE_KEY_PREFIX}${key}`, serialized, {
+      await this.client.set(`${CACHE_KEY_PREFIX}${key}`, value, {
         ex: ttlSeconds,
       });
     } catch (err) {
@@ -97,9 +85,5 @@ export class CacheService implements OnModuleDestroy {
         `Cache delByPrefix failed for ${pattern}: ${(err as Error).message}`,
       );
     }
-  }
-
-  onModuleDestroy(): void {
-    // REST client keeps an HTTP agent alive; nothing to close explicitly.
   }
 }
