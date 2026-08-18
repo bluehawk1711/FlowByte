@@ -3,6 +3,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { DATABASE, type Database } from '../db/db.module';
 import { favorites, songs, artists, albums } from '../db/schema';
 import { SongsService } from '../songs/songs.service';
+import { CacheService } from '../cache/cache.service';
 import type { Song } from '@flowbyte/types';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class FavoritesService {
   constructor(
     @Inject(DATABASE) private readonly db: Database,
     private readonly songsService: SongsService,
+    private readonly cache: CacheService,
   ) {}
 
   async list(userId: string): Promise<Song[]> {
@@ -29,12 +31,14 @@ export class FavoritesService {
       .insert(favorites)
       .values({ userId, songId })
       .onConflictDoNothing();
+    await this.cache.delByPrefix(`songs:list:${userId}`);
   }
 
   async remove(userId: string, songId: string): Promise<void> {
     await this.db
       .delete(favorites)
       .where(and(eq(favorites.userId, userId), eq(favorites.songId, songId)));
+    await this.cache.delByPrefix(`songs:list:${userId}`);
   }
 
   async has(userId: string, songId: string): Promise<void> {

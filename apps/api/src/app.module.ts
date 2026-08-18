@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { AlbumsModule } from './albums/albums.module';
 import { ArtistsModule } from './artists/artists.module';
+import { CacheModule } from './cache/cache.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { DbModule } from './db/db.module';
@@ -29,6 +30,7 @@ import { UploadsModule } from './uploads/uploads.module';
     }),
     DbModule,
     StorageModule,
+    CacheModule,
     AuthModule,
     DevicesModule,
     SongsModule,

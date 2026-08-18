@@ -7,12 +7,18 @@ import { mapSong } from './song-mapper';
 import type { ListSongsQuery } from './dto/list-songs.dto';
 import type { NormalizedLyrics, Paginated, Song, SongWithLyrics } from '@flowbyte/types';
 import { STREAM_TOKEN_TTL_SECONDS } from '@flowbyte/config';
+import { CacheService } from '../cache/cache.service';
 
 interface SongWithNames {
   song: (typeof songs)['$inferSelect'];
   artistName: string | null;
   albumName: string | null;
 }
+
+const LIST_TTL = 60; // library listings change with uploads; short TTL
+const DETAIL_TTL = 300; // song metadata is stable
+const SEARCH_TTL = 60;
+const STREAM_TTL = Math.max(60, STREAM_TOKEN_TTL_SECONDS - 60); // leave a re-signing margin
 
 @Injectable()
 export class SongsService {
@@ -22,6 +28,7 @@ export class SongsService {
   constructor(
     @Inject(DATABASE) private readonly db: Database,
     @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+    private readonly cache: CacheService,
   ) {}
 
   /** Enrich artwork keys into short-lived signed URLs (cached per key, 1h TTL). */
@@ -43,6 +50,19 @@ export class SongsService {
   }
 
   async findAll(userId: string, query: ListSongsQuery): Promise<Paginated<Song>> {
+    const cacheKey = [
+      'songs:list',
+      userId,
+      query.q ?? '',
+      query.artistId ?? '',
+      query.albumId ?? '',
+      query.genre ?? '',
+      query.page ?? 1,
+      query.pageSize ?? 50,
+    ].join(':');
+    const cached = await this.cache.get<Paginated<Song>>(cacheKey);
+    if (cached) return cached;
+
     const conditions = [];
     if (query.q) {
       const like = `%${query.q.toLowerCase()}%`;
@@ -87,10 +107,16 @@ export class SongsService {
 
     const favIds = await this.favoriteIds(userId);
     const items = await this.enrich(rows, favIds);
-    return { items, total, page, pageSize };
+    const result: Paginated<Song> = { items, total, page, pageSize };
+    await this.cache.set(cacheKey, result, LIST_TTL);
+    return result;
   }
 
   async findById(id: string): Promise<Song> {
+    const cacheKey = `songs:detail:${id}`;
+    const cached = await this.cache.get<Song>(cacheKey);
+    if (cached) return cached;
+
     const rows = await this.db
       .select({ song: songs, artistName: artists.name, albumName: albums.name })
       .from(songs)
@@ -99,7 +125,9 @@ export class SongsService {
       .where(eq(songs.id, id))
       .limit(1);
     if (rows.length === 0) throw new NotFoundException('Song not found');
-    return (await this.enrich(rows, new Set()))[0]!;
+    const song = (await this.enrich(rows, new Set()))[0]!;
+    await this.cache.set(cacheKey, song, DETAIL_TTL);
+    return song;
   }
 
   async findByIds(ids: string[]): Promise<Song[]> {
@@ -136,6 +164,10 @@ export class SongsService {
   }
 
   async getStreamInfo(id: string): Promise<{ url: string; expiresIn: number }> {
+    const cacheKey = `songs:stream:${id}`;
+    const cached = await this.cache.get<{ url: string; expiresIn: number }>(cacheKey);
+    if (cached) return cached;
+
     const [row] = await this.db
       .select({ song: songs })
       .from(songs)
@@ -147,7 +179,9 @@ export class SongsService {
       expiresIn,
       filename: `${row.song.title}.${row.song.codec ?? 'opus'}`,
     });
-    return { url, expiresIn };
+    const result = { url, expiresIn };
+    await this.cache.set(cacheKey, result, STREAM_TTL);
+    return result;
   }
 
   async getWithLyrics(id: string): Promise<SongWithLyrics> {
@@ -165,6 +199,14 @@ export class SongsService {
   }
 
   async search(query: string): Promise<{ songs: Song[]; artists: ArtistHit[]; albums: AlbumHit[] }> {
+    const cacheKey = `search:${query.toLowerCase().trim()}`;
+    const cached = await this.cache.get<{
+      songs: Song[];
+      artists: ArtistHit[];
+      albums: AlbumHit[];
+    }>(cacheKey);
+    if (cached) return cached;
+
     const like = `%${query.toLowerCase()}%`;
     const songRows = await this.db
       .select({ song: songs, artistName: artists.name, albumName: albums.name })
@@ -195,7 +237,7 @@ export class SongsService {
       .orderBy(asc(albums.name))
       .limit(15);
 
-    return {
+    const result = {
       songs: await this.enrich(songRows, new Set()),
       artists: await Promise.all(
         artistRows.map(async (a) => ({
@@ -217,6 +259,8 @@ export class SongsService {
         })),
       ),
     };
+    await this.cache.set(cacheKey, result, SEARCH_TTL);
+    return result;
   }
 
   // -------------------------------------------------------------------------

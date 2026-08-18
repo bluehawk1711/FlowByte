@@ -4,7 +4,11 @@ import { DATABASE, type Database } from '../db/db.module';
 import { albums, artists, songs } from '../db/schema';
 import { STORAGE_PROVIDER, type StorageProvider } from '../storage/storage-provider.interface';
 import { SongsService } from '../songs/songs.service';
-import type { Album, Artist } from '@flowbyte/types';
+import { CacheService } from '../cache/cache.service';
+import type { Album, Artist, Song } from '@flowbyte/types';
+
+const LIST_TTL = 300;
+const DETAIL_TTL = 300;
 
 @Injectable()
 export class ArtistsService {
@@ -12,9 +16,13 @@ export class ArtistsService {
     @Inject(DATABASE) private readonly db: Database,
     private readonly songsService: SongsService,
     @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+    private readonly cache: CacheService,
   ) {}
 
   async list(): Promise<Artist[]> {
+    const cached = await this.cache.get<Artist[]>('artists:list');
+    if (cached) return cached;
+
     const rows = await this.db
       .select({
         id: artists.id,
@@ -28,7 +36,7 @@ export class ArtistsService {
       .leftJoin(albums, eq(albums.artistId, artists.id))
       .groupBy(artists.id, artists.name, artists.artworkStorageKey)
       .orderBy(asc(artists.name));
-    return Promise.all(
+    const result = await Promise.all(
       rows.map(async (r) => ({
         id: r.id,
         name: r.name,
@@ -38,9 +46,15 @@ export class ArtistsService {
         albumCount: Number(r.albumCount),
       })),
     );
+    await this.cache.set('artists:list', result, LIST_TTL);
+    return result;
   }
 
-  async getDetail(id: string): Promise<{ artist: Artist; songs: import('@flowbyte/types').Song[]; albums: Album[] }> {
+  async getDetail(id: string): Promise<{ artist: Artist; songs: Song[]; albums: Album[] }> {
+    const cacheKey = `artists:detail:${id}`;
+    const cached = await this.cache.get<{ artist: Artist; songs: Song[]; albums: Album[] }>(cacheKey);
+    if (cached) return cached;
+
     const [row] = await this.db
       .select()
       .from(artists)
@@ -64,7 +78,7 @@ export class ArtistsService {
         releaseYear: r.album.releaseYear,
       })),
     );
-    return {
+    const result = {
       artist: {
         id: row.id,
         name: row.name,
@@ -74,5 +88,7 @@ export class ArtistsService {
       songs: await this.songsService.findByArtist(id),
       albums: albumList,
     };
+    await this.cache.set(cacheKey, result, DETAIL_TTL);
+    return result;
   }
 }

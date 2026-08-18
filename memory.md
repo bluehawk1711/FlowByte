@@ -23,7 +23,7 @@ Persistent project memory. Updated as tasks complete. Supersedes stale assumptio
 | 8. Library features (API) | ✅ DONE (client UI part of 5b/7) |
 | 9. Lyrics (API) | ✅ DONE (client UI part of 5b/7) |
 | 10. Playback sync (API) | ✅ DONE (client push part of 5b/7) |
-| 11. Optimization | ⏳ PENDING — **Upstash Redis** read-through cache (library lists, search, artist/album detail, stream-URL short-circuit; TTL + invalidation on writes; disabled when REDIS_URL unset) |
+| 11. Optimization | ✅ DONE — **Upstash Redis** read-through cache (`cache.service.ts` REST client; songs list/detail/stream/search + artists/albums/playlists; TTL 60–300s; invalidation on uploads/lyrics/favorites/playlist writes; no-op when REDIS_URL/REDIS_TOKEN unset) |
 | 12. GitHub Actions CI | ✅ DONE (desktop-build.yml + mobile-build.yml, both manual dev/release) |
 | 13. Database (Neon) | ✅ DONE — migrations applied, API boots against Neon, Swagger verified |
 
@@ -33,7 +33,7 @@ Persistent project memory. Updated as tasks complete. Supersedes stale assumptio
 - **Safe dep upgrades (July 2026):** desktop react 19.2.x + @types/react, sonner 2.x, tailwind-merge 3.x; API bcryptjs 3.x (ships own types, `@types/bcryptjs` removed). Expo/native deps stay pinned to SDK 54 (expo ~54.0.36, RN 0.81.5, reanimated ~4.1.x, async-storage 2.x) — SDK 55/56/57 bumps + native minors are deferred (can't verify locally; CI APK is the only test). No TypeScript 7 (Go rewrite) — stayed on 5.9.
 - **Desktop hybrid playback:** same as mobile — play local files (via Tauri `convertFileSrc`) OR API stream URLs through one HTML5 `<audio>` PlayerContext. `SongSource = 'api' | 'local'` shared resolution.
 - **Mobile hybrid playback:** `lib/playback.ts resolvePlaybackUrl()` — offline download exists → local `file://` URI; else API `getStreamUrl()`. `audioContext.setSong` and `setupAudio` (resume-on-startup) both resolve before `AudioPro.play`.
-- **Upstash Redis for caching (Phase 11):** read-through cache via NestJS cache-manager; PostgreSQL stays source of truth; `REDIS_URL` env; cache disabled when unset.
+- **Upstash Redis for caching (Phase 11):** `CacheModule` (global) + `CacheService` using `@upstash/redis@1.38.2` REST client; keys prefixed `fb:`; get/set(TTL)/del/delByPrefix(SCAN loop). Enabled only when **both** `REDIS_URL` + `REDIS_TOKEN` set (REST URL + token from console.upstash.com); PostgreSQL stays source of truth; boot logs DISABLED otherwise. Cache keys/TTLs + invalidation points documented in `architecture.md`.
 - **Mobile API naming:** api song ids namespaced `api:<uuid>` (matches the `local:`/`api:` no-collision decision); `apiSongId` carries the server id; mobile `Song` extended with optional api fields (additive — legacy local playback untouched).
 - **Mini-player overlay (Windows):** second frameless transparent window, always-on-top + skip-taskbar, opened from player UI. In plan (post-frontend).
 - **Windows media controls:** SMTC via `windows` crate is the chosen path — NOT now. `tauri-plugin-notification` has no Windows action-button support, so notifications-with-controls is out of v1 scope.

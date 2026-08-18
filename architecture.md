@@ -132,9 +132,11 @@ Key constraints:
 
 ## Caching (Phase 11 — Upstash Redis)
 
-- Read-through cache via NestJS cache-manager wired to Upstash Redis (`REDIS_URL`, optional).
-- Candidates: song/artist/album lists, search results, artist/album detail, stream-URL resolution. TTL-based expiry; explicit invalidation on writes (cache-manager `del` in the write paths of the relevant modules).
-- PostgreSQL remains the source of truth; cache is disabled entirely when `REDIS_URL` is unset (no behavior change).
+- **Implemented:** `src/cache/cache.module.ts` (global) + `cache.service.ts` — `@upstash/redis` REST client (`{ url, token }`), no-op when `REDIS_URL`/`REDIS_TOKEN` unset (boot logs "cache DISABLED").
+- Key scheme (all keys prefixed `fb:`): `songs:list:{userId}:{q}:{artistId}:{albumId}:{genre}:{page}:{pageSize}` (TTL 60s), `songs:detail:{id}` (300s), `songs:stream:{id}` (TTL = stream TTL − 60s margin), `search:{q}` (60s), `artists:list`/`albums:list` (300s), `artists:detail:{id}`/`albums:detail:{id}` (300s), `playlists:list:{userId}`/`playlists:detail:{userId}:{id}` (120s).
+- Invalidation on writes: uploads `complete()` → `delByPrefix('songs:list')` + `search:` + `artists:list`/`albums:list`; lyrics import → `songs:detail:{id}`; favorites add/remove → `delByPrefix('songs:list:{userId}')`; playlist create/update/remove/addSong/removeSong/reorder → list + detail keys.
+- `delByPrefix` = SCAN(`fb:<prefix>*`, count 100) loop + DEL batch.
+- PostgreSQL remains the source of truth; cache is disabled entirely when env unset (no behavior change).
 
 ## Error Handling
 
@@ -149,7 +151,8 @@ STORAGE_PROVIDER=local|backblaze
 LOCAL_STORAGE_PATH=../storage
 B2_ENDPOINT= B2_KEY_ID= B2_APPLICATION_KEY= B2_BUCKET=
 JWT_SECRET= JWT_REFRESH_SECRET=
-REDIS_URL=            # optional
+REDIS_URL=            # optional (Upstash REST URL)
+REDIS_TOKEN=          # optional (Upstash REST token)
 PORT=3001             # API port (desktop app does not own a port)
 ```
 

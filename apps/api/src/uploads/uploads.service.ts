@@ -4,6 +4,7 @@ import { DATABASE, type Database } from '../db/db.module';
 import { albums, artists, songs } from '../db/schema';
 import { STORAGE_PROVIDER, type StorageProvider } from '../storage/storage-provider.interface';
 import { SongsService } from '../songs/songs.service';
+import { CacheService } from '../cache/cache.service';
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import type { CompleteUploadDto } from './dto/complete-upload.dto';
@@ -17,6 +18,7 @@ export class UploadsService {
     @Inject(DATABASE) private readonly db: Database,
     @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
     private readonly songsService: SongsService,
+    private readonly cache: CacheService,
   ) {}
 
   /** Raw audio bytes → storage. Key: audio/{uuid}.{ext} */
@@ -132,6 +134,10 @@ export class UploadsService {
     });
 
     this.logger.log(`Song added: ${result.title} (${result.id})`);
+    await this.cache.delByPrefix('songs:list');
+    await this.cache.delByPrefix('search:');
+    await this.cache.del('artists:list');
+    await this.cache.del('albums:list');
     return { song: await this.songsService.findById(result.id), duplicate: false };
   }
 

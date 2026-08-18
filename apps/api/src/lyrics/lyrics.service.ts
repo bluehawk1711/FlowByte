@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { DATABASE, type Database } from '../db/db.module';
 import { songs } from '../db/schema';
 import { STORAGE_PROVIDER, type StorageProvider } from '../storage/storage-provider.interface';
+import { CacheService } from '../cache/cache.service';
 import { parseLyrics, type LyricsFormat } from './lyrics.parser';
 import { randomUUID } from 'node:crypto';
 import type { NormalizedLyrics } from '@flowbyte/types';
@@ -31,6 +32,7 @@ export class LyricsService {
   constructor(
     @Inject(DATABASE) private readonly db: Database,
     @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+    private readonly cache: CacheService,
   ) {}
 
   async getForSong(songId: string): Promise<NormalizedLyrics | null> {
@@ -63,6 +65,7 @@ export class LyricsService {
         updatedAt: new Date(),
       })
       .where(eq(songs.id, songId));
+    await this.cache.del(`songs:detail:${songId}`);
     return normalized;
   }
 

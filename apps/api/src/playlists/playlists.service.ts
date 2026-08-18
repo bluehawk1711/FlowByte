@@ -3,9 +3,13 @@ import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { DATABASE, type Database } from '../db/db.module';
 import { playlistSongs, playlists, songs, artists, albums } from '../db/schema';
 import { SongsService } from '../songs/songs.service';
+import { CacheService } from '../cache/cache.service';
 import { STORAGE_PROVIDER, type StorageProvider } from '../storage/storage-provider.interface';
 import type { Playlist, PlaylistDetail, Song } from '@flowbyte/types';
 import type { CreatePlaylistDto, UpdatePlaylistDto } from './dto/playlist.dto';
+
+const LIST_TTL = 120;
+const DETAIL_TTL = 120;
 
 @Injectable()
 export class PlaylistsService {
@@ -13,9 +17,22 @@ export class PlaylistsService {
     @Inject(DATABASE) private readonly db: Database,
     private readonly songsService: SongsService,
     @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+    private readonly cache: CacheService,
   ) {}
 
+  private listKey(userId: string): string {
+    return `playlists:list:${userId}`;
+  }
+
+  private detailKey(userId: string, id: string): string {
+    return `playlists:detail:${userId}:${id}`;
+  }
+
   async list(userId: string): Promise<Playlist[]> {
+    const cacheKey = this.listKey(userId);
+    const cached = await this.cache.get<Playlist[]>(cacheKey);
+    if (cached) return cached;
+
     const rows = await this.db
       .select({
         playlist: playlists,
@@ -26,7 +43,7 @@ export class PlaylistsService {
       .where(eq(playlists.userId, userId))
       .groupBy(playlists.id)
       .orderBy(asc(playlists.name));
-    return Promise.all(
+    const result = await Promise.all(
       rows.map(async (r) => ({
         id: r.playlist.id,
         userId: r.playlist.userId,
@@ -39,9 +56,15 @@ export class PlaylistsService {
         updatedAt: r.playlist.updatedAt.toISOString(),
       })),
     );
+    await this.cache.set(cacheKey, result, LIST_TTL);
+    return result;
   }
 
   async getDetail(userId: string, id: string): Promise<PlaylistDetail> {
+    const cacheKey = this.detailKey(userId, id);
+    const cached = await this.cache.get<PlaylistDetail>(cacheKey);
+    if (cached) return cached;
+
     const [row] = await this.db
       .select()
       .from(playlists)
@@ -59,7 +82,7 @@ export class PlaylistsService {
       .orderBy(asc(playlistSongs.position));
     const items: Song[] = await this.songsService.enrich(songRows, new Set());
 
-    return {
+    const result: PlaylistDetail = {
       id: row.id,
       userId: row.userId,
       name: row.name,
@@ -71,6 +94,8 @@ export class PlaylistsService {
       updatedAt: row.updatedAt.toISOString(),
       songs: items,
     };
+    await this.cache.set(cacheKey, result, DETAIL_TTL);
+    return result;
   }
 
   async create(userId: string, dto: CreatePlaylistDto): Promise<Playlist> {
@@ -79,6 +104,7 @@ export class PlaylistsService {
       .values({ userId, name: dto.name, description: dto.description ?? null })
       .returning();
     if (!row) throw new Error('Failed to create playlist');
+    await this.cache.del(this.listKey(userId));
     return {
       id: row.id,
       userId: row.userId,
@@ -104,12 +130,16 @@ export class PlaylistsService {
       .where(eq(playlists.id, id))
       .returning();
     if (!row) throw new Error('Failed to update playlist');
+    await this.cache.del(this.listKey(userId));
+    await this.cache.del(this.detailKey(userId, id));
     return this.list(userId).then((l) => l.find((p) => p.id === id)!);
   }
 
   async remove(userId: string, id: string): Promise<void> {
     await this.ensureOwned(userId, id);
     await this.db.delete(playlists).where(eq(playlists.id, id));
+    await this.cache.del(this.listKey(userId));
+    await this.cache.del(this.detailKey(userId, id));
   }
 
   async addSong(userId: string, playlistId: string, songId: string): Promise<void> {
@@ -128,6 +158,8 @@ export class PlaylistsService {
       .insert(playlistSongs)
       .values({ playlistId, songId, position: (maxRow?.maxPos ?? -1) + 1 })
       .onConflictDoNothing();
+    await this.cache.del(this.detailKey(userId, playlistId));
+    await this.cache.del(this.listKey(userId));
   }
 
   async removeSong(userId: string, playlistId: string, songId: string): Promise<void> {
@@ -135,6 +167,8 @@ export class PlaylistsService {
     await this.db
       .delete(playlistSongs)
       .where(and(eq(playlistSongs.playlistId, playlistId), eq(playlistSongs.songId, songId)));
+    await this.cache.del(this.detailKey(userId, playlistId));
+    await this.cache.del(this.listKey(userId));
   }
 
   async reorder(userId: string, playlistId: string, songIds: string[]): Promise<void> {
@@ -152,6 +186,7 @@ export class PlaylistsService {
           );
       }
     });
+    await this.cache.del(this.detailKey(userId, playlistId));
   }
 
   private async ensureOwned(userId: string, id: string) {
