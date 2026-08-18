@@ -163,6 +163,14 @@ UPSTASH_REDIS_REST_TOKEN= # optional (Upstash REST token)
 PORT=3001             # API port (desktop app does not own a port)
 ```
 
+### Client env files (no secrets — the API owns secrets)
+
+| Project | File | Vars |
+|---|---|---|
+| API | `apps/api/.env` (+ `.env.example`) | full template above |
+| Desktop | `apps/desktop/.env` (+ `.env.example`) | `VITE_API_URL` (default `http://localhost:3001`), dev-only `TAURI_DEV_HOST` |
+| Mobile | `apps/mobile/.env` (+ `.env.example`) | `EXPO_PUBLIC_API_URL` (default `http://localhost:3001`; LAN IP for devices) |
+
 ## Out of Scope (v1)
 
 Lyrics translation, AI recommendations, advanced search infra, microservices, Redis everywhere (cache only — PostgreSQL stays the source of truth).

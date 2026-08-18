@@ -189,10 +189,7 @@ Auth: JWT access + refresh tokens (separate secrets), guards via @nestjs/jwt. Al
 8. ~~Library features (API)~~ (DONE — client UI shipped in desktop; mobile list/sync additive)
 9. ~~Lyrics system (providers, parsing, normalization)~~ (DONE — desktop lyrics view small follow-up)
 10. ~~Playback synchronization (state, resume, devices)~~ (DONE — desktop pushes; mobile pusher in Phase 7)
-11. Optimization — **Upstash Redis read-through cache**:
-    - `@nestjs/cache-manager` + Upstash (REST/ioredis) wired in the API
-    - Cache: songs/artists/albums list responses, search results, artist/album detail, stream-URL resolution; TTL-based + explicit invalidation on create/update/delete
-    - Fallback: if `REDIS_URL` is unset, cache manager is disabled (no behavior change)
+11. ~~Optimization — **Upstash Redis read-through cache**~~ (DONE — `@upstash/redis` REST client via `Redis.fromEnv()`; songs/artists/albums lists + detail, search, stream-URL resolution, playlists; TTL 60–300s; explicit invalidation on uploads/lyrics/favorites/playlist writes; disabled when `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` unset)
 12. ~~GitHub Actions CI (desktop + mobile, manual dev/release)~~ (DONE)
 
 ## Deferred (NOT now)
