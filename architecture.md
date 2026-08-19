@@ -136,6 +136,9 @@ Key constraints:
 - **Settings:** `DesktopSettings.iframePreview` (default ON) — "Show iframe preview". OFF = no embed, download controls only.
 - URL parsing: `parseYouTubeUrl()` in `lib/utils.ts`. Zero Rust/API changes.
 - **Audio engine:** `react-native-audio-pro` retained — it provides notification-center next/prev controls + remote events (`REMOTE_NEXT`/`REMOTE_PREV`); `expo-audio` only offers lock-screen seek buttons and no remote events, so it can't replace it (unused `expo-audio` dep removed).
+- **Playlist sync (two-way):** pull server playlists (id = server id, `serverId` set); push locally-created playlists (create + `addSongToPlaylist`, local id remapped to server id; seeded "123" Default Playlist is local-only); deletions of synced playlists tracked via `deletedServerIds` tombstones and applied to the API on next sync.
+- **Saved YouTube links (mobile):** `lib/saved.ts` + hidden Saved tab; paste YouTube video/playlist URL → local zustand store; Play via `expo-web-browser` in-app browser (no native deps). Desktop equivalent lives in `apps/desktop` (iframe embed playback — see Desktop section).
+- **Playing screen (cloud songs):** Cloud badge + "Download offline" toggle backed by `lib/offline` (`downloadSong`/`removeOfflineSong`, live via `onOfflineChange`).
 
 ## Caching (Phase 11 — Upstash Redis)
 

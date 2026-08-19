@@ -73,6 +73,13 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      {/* Hidden screen for saved YouTube links */}
+      <Tabs.Screen
+        name="saved/index"
+        options={{
+          href: null,
+        }}
+      />
       {/* Hidden screen for folder music list */}
       <Tabs.Screen
         name="folders/[id]/index"

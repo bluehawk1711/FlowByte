@@ -73,7 +73,7 @@ async function syncFavorites(errors: string[]): Promise<number> {
   return serverSongs.size;
 }
 
-/** Pull server playlists into the local playlist store (additive). */
+/** Pull server playlists into the local store; push local creates + deletes. */
 async function syncPlaylists(errors: string[]): Promise<number> {
   const api = client;
   if (!api) return 0;
@@ -82,6 +82,20 @@ async function syncPlaylists(errors: string[]): Promise<number> {
   const localIds = new Set(localStore.playlists.map((p) => p.id));
   const apiIds = new Set<string>();
 
+  // Deletes first: server playlists the user removed locally.
+  for (const serverId of localStore.deletedServerIds) {
+    try {
+      await api.deletePlaylist(serverId);
+      apiIds.delete(serverId);
+    } catch (e) {
+      errors.push(`delete playlist ${serverId}: ${String(e)}`);
+    }
+  }
+  if (localStore.deletedServerIds.length > 0) {
+    localStore.clearDeletedServerIds(localStore.deletedServerIds);
+  }
+
+  // Pull: server playlists not yet known locally (additive).
   for (const p of serverPlaylists) {
     apiIds.add(p.id);
     if (localIds.has(p.id)) continue;
@@ -90,6 +104,7 @@ async function syncPlaylists(errors: string[]): Promise<number> {
       const playlistObj: PlaylistObj = {
         id: p.id,
         name: p.name,
+        serverId: p.id,
         songs: detail.songs.map(toMobileSong),
       };
       localStore.createPlaylist(playlistObj);
@@ -97,7 +112,41 @@ async function syncPlaylists(errors: string[]): Promise<number> {
       errors.push(`playlist ${p.id}: ${String(e)}`);
     }
   }
-  return apiIds.size;
+
+  // Push: locally-created playlists (id not on the server) — except the
+  // seeded "Default Playlist" (id "123"), which is a local-only convenience.
+  let pushed = 0;
+  for (const playlist of localStore.playlists) {
+    if (playlist.id === "123") continue;
+    if (apiIds.has(playlist.id) || playlist.serverId) continue;
+    try {
+      const created = await api.createPlaylist({ name: playlist.name });
+      const serverId = created.id;
+      for (const song of playlist.songs) {
+        if (!song) continue;
+        const apiSongId = toApiSongId(song);
+        if (!apiSongId) continue;
+        try {
+          await api.addSongToPlaylist(serverId, apiSongId);
+        } catch (e) {
+          errors.push(`playlist song ${apiSongId}: ${String(e)}`);
+        }
+      }
+      // Re-id the local playlist to the server id so future syncs match.
+      usePlaylist.setState({
+        playlists: usePlaylist
+          .getState()
+          .playlists.map((p) =>
+            p.id === playlist.id ? { ...p, id: serverId, serverId } : p,
+          ),
+      });
+      apiIds.add(serverId);
+      pushed++;
+    } catch (e) {
+      errors.push(`create playlist ${playlist.name}: ${String(e)}`);
+    }
+  }
+  return apiIds.size + pushed;
 }
 
 /** Push the current playback position to the API (throttled by the caller). */

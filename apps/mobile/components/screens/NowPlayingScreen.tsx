@@ -1,10 +1,18 @@
 import { AppColors } from "@/constants/theme";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
+import { API_PREFIX } from "@/lib/sync";
+import {
+  downloadSong,
+  isDownloaded,
+  onOfflineChange,
+  removeOfflineSong,
+} from "@/lib/offline";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   Image,
   Pressable,
@@ -48,6 +56,45 @@ export const NowPlayingScreen = () => {
     audioState === AudioProState.LOADING;
 
   const router = useRouter();
+
+  const apiSongId =
+    song?.source === "api"
+      ? (song.apiSongId ?? (song.id.startsWith(API_PREFIX) ? song.id.slice(API_PREFIX.length) : null))
+      : null;
+
+  const [offline, setOffline] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  // Track offline status for cloud songs (re-renders when downloads change).
+  useEffect(() => {
+    let mounted = true;
+    if (!apiSongId) {
+      setOffline(false);
+      return;
+    }
+    void isDownloaded(apiSongId).then((d) => mounted && setOffline(d));
+    const unsub = onOfflineChange(() => {
+      void isDownloaded(apiSongId).then((d) => mounted && setOffline(d));
+    });
+    return () => {
+      mounted = false;
+      unsub();
+    };
+  }, [apiSongId]);
+
+  const onToggleOffline = async () => {
+    if (!song || !apiSongId) return;
+    if (offline) {
+      await removeOfflineSong(apiSongId);
+      return;
+    }
+    setDownloading(true);
+    try {
+      await downloadSong(song);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   // Slider values
   const progress = useSharedValue(0);
@@ -142,6 +189,32 @@ export const NowPlayingScreen = () => {
         <Text style={styles.artistName} numberOfLines={1}>
           {song?.artist}
         </Text>
+        {apiSongId && (
+          <View style={styles.cloudRow}>
+            <View style={styles.cloudBadge}>
+              <Ionicons name="cloud" size={11} color={AppColors.accentCyan} />
+              <Text style={styles.cloudBadgeText}>Cloud</Text>
+            </View>
+            <Pressable
+              style={styles.offlineButton}
+              onPress={() => void onToggleOffline()}
+              hitSlop={8}
+            >
+              {downloading ? (
+                <ActivityIndicator size="small" color={AppColors.textPrimary} />
+              ) : (
+                <Ionicons
+                  name={offline ? "checkmark-circle" : "download-outline"}
+                  size={16}
+                  color={offline ? AppColors.accentCyan : AppColors.textSecondary}
+                />
+              )}
+              <Text style={styles.offlineText}>
+                {offline ? "Saved offline" : "Download offline"}
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
       {/* Progress Slider */}
@@ -308,6 +381,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: AppColors.accentCyan,
     marginTop: 4,
+  },
+  cloudRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 8,
+  },
+  cloudBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: "#14202B",
+  },
+  cloudBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: AppColors.accentCyan,
+  },
+  offlineButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: "#1A1A2E",
+  },
+  offlineText: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: AppColors.textSecondary,
   },
   progressContainer: {
     marginBottom: 32,

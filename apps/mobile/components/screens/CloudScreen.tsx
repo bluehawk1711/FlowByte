@@ -128,6 +128,12 @@ export const CloudScreen: React.FC = () => {
               color={AppColors.textPrimary}
             />
           </Pressable>
+          <Pressable
+            style={styles.actionButton}
+            onPress={() => router.push("/(tabs)/saved")}
+          >
+            <Ionicons name="logo-youtube" size={24} color="#FF4E45" />
+          </Pressable>
         </View>
       </View>
 

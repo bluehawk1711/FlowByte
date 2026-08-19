@@ -23,6 +23,8 @@ type PlaylistObj = {
   id: string;
   name: string;
   songs: Song[];
+  /** Server-side playlist id when this playlist is synced to Flowbyte Cloud. */
+  serverId?: string;
 };
 
 type audioStatusType = {
