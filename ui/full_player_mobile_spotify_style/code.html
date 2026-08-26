@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Aura - Full Screen Player</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#0b1326",
+                      "error": "#ffb4ab",
+                      "secondary-container": "#00a572",
+                      "tertiary-container": "#ca801e",
+                      "on-tertiary-fixed": "#2c1700",
+                      "on-tertiary-container": "#3f2300",
+                      "surface-container-high": "#222a3d",
+                      "on-primary-fixed": "#23005c",
+                      "on-error-container": "#ffdad6",
+                      "on-surface-variant": "#cbc3d7",
+                      "surface-variant": "#2d3449",
+                      "on-secondary-fixed-variant": "#005236",
+                      "on-primary-fixed-variant": "#5516be",
+                      "outline-variant": "#494454",
+                      "inverse-on-surface": "#283044",
+                      "surface": "#0b1326",
+                      "on-primary-container": "#340080",
+                      "secondary-fixed-dim": "#4edea3",
+                      "secondary-fixed": "#6ffbbe",
+                      "on-secondary-fixed": "#002113",
+                      "error-container": "#93000a",
+                      "on-error": "#690005",
+                      "tertiary": "#ffb869",
+                      "primary-fixed": "#e9ddff",
+                      "primary-container": "#a078ff",
+                      "on-primary": "#3c0091",
+                      "surface-container-highest": "#2d3449",
+                      "surface-bright": "#31394d",
+                      "surface-container-low": "#131b2e",
+                      "tertiary-fixed": "#ffdcbb",
+                      "primary": "#d0bcff",
+                      "surface-container": "#171f33",
+                      "tertiary-fixed-dim": "#ffb869",
+                      "on-surface": "#dae2fd",
+                      "on-background": "#dae2fd",
+                      "secondary": "#4edea3",
+                      "outline": "#958ea0",
+                      "on-tertiary-fixed-variant": "#673d00",
+                      "inverse-surface": "#dae2fd",
+                      "surface-tint": "#d0bcff",
+                      "on-secondary": "#003824",
+                      "on-tertiary": "#482900",
+                      "background": "#0b1326",
+                      "surface-container-lowest": "#060e20",
+                      "primary-fixed-dim": "#d0bcff",
+                      "inverse-primary": "#6d3bd7",
+                      "on-secondary-container": "#00311f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "huge": "64px",
+                      "xs": "4px",
+                      "md": "16px",
+                      "xxl": "48px",
+                      "lg": "24px",
+                      "xl": "32px",
+                      "margin-desktop": "32px",
+                      "sm": "8px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "artist-name": [
+                              "Hanken Grotesk"
+                      ],
+                      "body": [
+                              "Hanken Grotesk"
+                      ],
+                      "h3": [
+                              "Hanken Grotesk"
+                      ],
+                      "h2": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-lg-mobile": [
+                              "Hanken Grotesk"
+                      ],
+                      "h1": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "song-title": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "artist-name": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "h3": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "h2": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "h1": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "song-title": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        /* Hide scrollbar for clean player look */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Custom range slider styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -4px; /* offset to center on track */
+            opacity: 0; /* Hidden by default per spec */
+            transition: opacity 0.2s;
+        }
+        
+        .slider-container:hover input[type=range]::-webkit-slider-thumb {
+            opacity: 1; /* Visible on hover */
+        }
+        
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #535353; /* Spotify gray */
+            border-radius: 2px;
+        }
+        
+        /* Fake progress fill (since standard input[type=range] makes it tricky in cross-browser CSS alone, we use a wrapper hack or JS. Here we'll use a simple background gradient trick inline via JS later, but define base here) */
+        .progress-track-bg {
+            background: linear-gradient(to right, #1DB954 33%, #535353 33%); /* Spotify Green */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-[#2b2b2b] to-[#121212] text-white font-body h-screen w-screen overflow-hidden relative">
+<!-- Main Player Canvas -->
+<main class="relative z-10 flex flex-col h-full px-margin-mobile pb-margin-mobile pt-safe-top">
+<!-- Header -->
+<header class="flex justify-between items-center py-sm shrink-0">
+<button class="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors group">
+<span class="material-symbols-outlined text-white group-active:scale-95 transition-transform" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</button>
+<div class="flex flex-col items-center">
+<span class="font-bold text-[10px] text-white uppercase tracking-[0.15em]">Now Playing</span>
+</div>
+<button class="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors group">
+<span class="material-symbols-outlined text-white group-active:scale-95 transition-transform" data-icon="more_horiz">more_horiz</span>
+</button>
+</header>
+<!-- Artwork Area -->
+<div class="flex-1 flex items-center justify-center py-lg shrink-0 min-h-0">
+<!-- 1:1 Aspect Ratio container, constrained by parent height -->
+<div class="relative w-full max-w-[400px] aspect-square overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.5)] transition-transform duration-500 ease-out hover:scale-[1.02]">
+<img class="w-full h-full object-cover" data-alt="A striking, moody album cover featuring a solitary figure silhouetted against a neon-lit, rainy city street at night. The color palette is dominated by deep blacks, electric violet, and visceral crimson reds. High-end, precise, and emotionally evocative." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArBN_u48rl2EHaW5m60ua0EkBd9LOQH2AOAblpZfla-IIPwKm7-auYSCScxHxPahoQL2T1H5e4DqgCKkiUS5c-Ri9YVmJ0GsbOlSgLLFU7B4dodOtZ7hDIDS3dsDg72VKUaXrcEkejtlvd0THd_3QtUOU9azu66fTMuAgvEkPvKRsC_4ypKNzg2ziT1SE1hwNkcvFYlLQgt4fcIgHcItwBfbmrryK9kmNa9-PGldMoPGeYev1ggRU"/>
+</div>
+</div>
+<!-- Track Info & Controls Area -->
+<div class="w-full max-w-[400px] mx-auto shrink-0 pb-md">
+<!-- Metadata Row -->
+<div class="flex justify-between items-center mb-xl">
+<div class="flex flex-col overflow-hidden pr-4">
+<h1 class="font-bold text-[24px] text-white truncate leading-tight">Hardest To Love</h1>
+<p class="font-normal text-[16px] text-[#A7A7A7] truncate mt-1">The Weeknd</p>
+</div>
+<button class="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors group shrink-0">
+<span class="material-symbols-outlined text-[#1DB954] group-active:scale-95 transition-transform" data-icon="favorite" data-weight="fill" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<!-- Progress Slider -->
+<div class="mb-lg slider-container group relative">
+<!-- Using inline style to simulate the progress fill for visual accuracy -->
+<input class="w-full h-1 appearance-none bg-transparent relative z-10 progress-track-bg rounded-full focus:outline-none" id="progress-slider" max="100" min="0" type="range" value="33"/>
+<div class="flex justify-between items-center mt-2 px-1">
+<span class="font-normal text-[12px] text-[#A7A7A7]">1:12</span>
+<span class="font-normal text-[12px] text-[#A7A7A7]">-2:19</span>
+</div>
+</div>
+<!-- Main Transport Controls -->
+<div class="flex justify-between items-center mb-xl px-2">
+<button class="p-2 rounded-full text-[#A7A7A7] hover:text-white transition-colors group">
+<span class="material-symbols-outlined text-[24px] group-active:scale-95 transition-transform" data-icon="shuffle">shuffle</span>
+</button>
+<div class="flex items-center gap-md">
+<button class="p-3 rounded-full text-white hover:bg-white/10 transition-colors group">
+<span class="material-symbols-outlined text-[36px] group-active:scale-95 transition-transform" data-icon="skip_previous" data-weight="fill" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+</button>
+<button class="w-[64px] h-[64px] flex items-center justify-center rounded-full bg-[#1DB954] text-black hover:scale-105 transition-transform shadow-lg group">
+<span class="material-symbols-outlined text-[36px] group-active:scale-95 transition-transform translate-x-[2px]" data-icon="play_arrow" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="p-3 rounded-full text-white hover:bg-white/10 transition-colors group">
+<span class="material-symbols-outlined text-[36px] group-active:scale-95 transition-transform" data-icon="skip_next" data-weight="fill" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</button>
+</div>
+<button class="p-2 rounded-full text-[#A7A7A7] hover:text-white transition-colors group">
+<span class="material-symbols-outlined text-[24px] group-active:scale-95 transition-transform" data-icon="repeat">repeat</span>
+</button>
+</div>
+<!-- Bottom Actions -->
+<div class="flex justify-center items-center gap-xl">
+<button class="flex flex-col items-center gap-1 p-2 rounded-lg text-[#A7A7A7] hover:text-white transition-colors group">
+<span class="material-symbols-outlined text-[20px] group-active:scale-95 transition-transform" data-icon="lyrics">lyrics</span>
+<span class="font-bold text-[10px] uppercase tracking-wider">Lyrics</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-2 rounded-lg text-[#A7A7A7] hover:text-white transition-colors group">
+<span class="material-symbols-outlined text-[20px] group-active:scale-95 transition-transform" data-icon="queue_music">queue_music</span>
+<span class="font-bold text-[10px] uppercase tracking-wider">Queue</span>
+</button>
+</div>
+</div>
+</main>
+<script>
+        // Simple script to handle dynamic progress bar coloring based on input value
+        const slider = document.getElementById('progress-slider');
+        
+        function updateSliderBg() {
+            const value = slider.value;
+            // Using Spotify Green for filled, Spotify Gray for track
+            slider.style.background = `linear-gradient(to right, #1DB954 ${value}%, #535353 ${value}%)`;
+        }
+
+        slider.addEventListener('input', updateSliderBg);
+        
+        // Init
+        updateSliderBg();
+    </script>
+</body></html>

@@ -9,7 +9,6 @@ import { FlashList } from "@shopify/flash-list";
 import { usePathname, useRouter } from "expo-router";
 import React, { PropsWithChildren, useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   StyleProp,
   StyleSheet,
@@ -17,6 +16,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import { SongRowSkeleton } from "@/components/ui/Skeleton";
 import { Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import EmptyState from "./EmptyState";
@@ -203,7 +203,9 @@ const SongList: React.FC<SongListProps> = ({
         ListEmptyComponent={
           isLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={AppColors.accentCyan} />
+              {Array.from({ length: 8 }).map((_, i) => (
+                <SongRowSkeleton key={i} delay={i * 40} />
+              ))}
             </View>
           ) : (
             <EmptyState title="No Songs Here" />

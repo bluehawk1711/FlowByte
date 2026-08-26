@@ -4,7 +4,7 @@ import { Song } from "@/constants/types";
 
 import { Ionicons } from "@expo/vector-icons";
 import * as MediaLibrary from "expo-media-library";
-import { useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -57,6 +57,16 @@ export const LibraryScreen: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.title}>Library</Text>
         <View style={styles.headerActions}>
+          <Pressable
+            style={styles.actionButton}
+            onPress={() => router.push("/(tabs)/add-music" as Href)}
+          >
+            <Ionicons
+              name="add-circle-outline"
+              size={26}
+              color={AppColors.accentCyan}
+            />
+          </Pressable>
           <Pressable
             style={styles.actionButton}
             onPress={() => router.push("/(tabs)/settings")}

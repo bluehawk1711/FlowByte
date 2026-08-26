@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Artist Page - Aura</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#e9ddff",
+                        "surface-bright": "#31394d",
+                        "surface-container-low": "#131b2e",
+                        "surface-variant": "#2d3449",
+                        "outline": "#958ea0",
+                        "on-tertiary-container": "#3f2300",
+                        "on-surface": "#dae2fd",
+                        "surface": "#0b1326",
+                        "on-primary-container": "#340080",
+                        "tertiary-container": "#ca801e",
+                        "on-error-container": "#ffdad6",
+                        "tertiary": "#ffb869",
+                        "inverse-on-surface": "#283044",
+                        "secondary-container": "#00a572",
+                        "on-primary-fixed": "#23005c",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "primary-fixed-dim": "#d0bcff",
+                        "background": "#0b1326",
+                        "primary": "#d0bcff",
+                        "error-container": "#93000a",
+                        "secondary-fixed": "#6ffbbe",
+                        "outline-variant": "#494454",
+                        "on-secondary": "#003824",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#00311f",
+                        "surface-container-high": "#222a3d",
+                        "on-tertiary": "#482900",
+                        "on-secondary-fixed": "#002113",
+                        "secondary": "#4edea3",
+                        "error": "#ffb4ab",
+                        "inverse-primary": "#6d3bd7",
+                        "surface-container-lowest": "#060e20",
+                        "on-primary": "#3c0091",
+                        "on-primary-fixed-variant": "#5516be",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-secondary-fixed-variant": "#005236",
+                        "tertiary-fixed": "#ffdcbb",
+                        "inverse-surface": "#dae2fd",
+                        "surface-container": "#171f33",
+                        "surface-dim": "#0b1326",
+                        "primary-container": "#a078ff",
+                        "on-background": "#dae2fd",
+                        "surface-tint": "#d0bcff",
+                        "surface-container-highest": "#2d3449"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "xxl": "48px",
+                        "margin-desktop": "32px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "huge": "64px",
+                        "gutter": "24px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "h3": ["Hanken Grotesk"],
+                        "h1": ["Hanken Grotesk"],
+                        "h2": ["Hanken Grotesk"],
+                        "artist-name": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "song-title": ["Hanken Grotesk"],
+                        "body": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "display-lg-mobile": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "h3": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "h1": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "h2": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "artist-name": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "song-title": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex overflow-hidden">
+<!-- Zone 1: Sidebar (Fixed, 280px) -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low dark:bg-surface-container-low flex flex-col py-lg px-md z-40 hidden md:flex border-r border-surface-variant">
+<div class="mb-xxl pl-sm">
+<h1 class="font-display-lg text-display-lg font-bold text-primary dark:text-primary leading-none tracking-tight">Aura</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Premium Music</p>
+</div>
+<nav class="flex-1 flex flex-col gap-sm">
+<a class="flex items-center gap-md p-sm rounded-lg hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">home</span>
+<span class="font-song-title text-song-title">Home</span>
+</a>
+<a class="flex items-center gap-md p-sm rounded-lg hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors text-primary font-bold bg-surface-variant/30" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-song-title text-song-title">Explore</span>
+</a>
+<a class="flex items-center gap-md p-sm rounded-lg hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">library_music</span>
+<span class="font-song-title text-song-title">Library</span>
+</a>
+<a class="flex items-center gap-md p-sm rounded-lg hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors text-on-surface-variant mt-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">add_box</span>
+<span class="font-song-title text-song-title">Create Playlist</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-sm pt-lg border-t border-surface-variant">
+<a class="flex items-center gap-md p-sm rounded-lg hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-song-title text-song-title">Settings</span>
+</a>
+<a class="flex items-center gap-md p-sm rounded-lg hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help_outline</span>
+<span class="font-song-title text-song-title">Support</span>
+</a>
+</div>
+</aside>
+<!-- Zone 2: Fluid Content Area -->
+<main class="flex-1 md:ml-[280px] md:mr-[320px] h-screen overflow-y-auto no-scrollbar pb-[90px] md:pb-[90px]">
+<!-- Top App Bar (Mobile Only / Sticky) -->
+<header class="flex md:hidden justify-between items-center w-full px-lg py-sm sticky top-0 z-40 bg-surface/90 dark:bg-surface/90 backdrop-blur-md">
+<h2 class="font-display-lg-mobile text-display-lg-mobile font-bold text-primary dark:text-primary">Aura</h2>
+<div class="flex items-center gap-md text-primary dark:text-primary">
+<span class="material-symbols-outlined hover:text-on-surface transition-colors cursor-pointer">search</span>
+<span class="material-symbols-outlined hover:text-on-surface transition-colors cursor-pointer">account_circle</span>
+</div>
+</header>
+<!-- Hero Header -->
+<div class="relative h-[400px] w-full flex items-end justify-start overflow-hidden group">
+<div class="absolute inset-0 bg-cover bg-center w-full h-full scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out z-0" data-alt="A sweeping, moody portrait of an electronic music artist silhouetted against a vibrant, glowing neon cityscape at night. The lighting is dramatic, with deep charcoal shadows contrasting sharply with electric violet and secondary green rim lights. The aesthetic is atmospheric minimalism, conveying a sense of late-night immersion and high-end sophistication. The image feels tactile and precise, like an album cover shot." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuClW55nuxJeP5o8YJ6A_e7vW3Chpe0ALSqZGF6jFFyGnCbNNLS-RDXluUQ_k4qkunxgTwpKgcUp3fwjalYDyScUBGw1oXh_D9-kvn-5eULdR4Wat0adMvz3YC6GrnXm_5F0sDXIkEUpLGhVaw3NLE-GJo0hs5SewzP5v4TaAC8D1zqiaT5VUi-sLBHGIsEYlfbeg9rrQoi-Oo029xfm6SjNue6tHI8tGQ5C17ByGeC2fh_n9hYRXoI')"></div>
+<!-- Gradient Overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10"></div>
+<div class="relative z-20 w-full p-margin-desktop md:p-xl flex flex-col md:flex-row md:items-end justify-between gap-lg">
+<div class="flex flex-col gap-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Verified Artist</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface md:text-6xl drop-shadow-lg">Echoes in Static</h1>
+<p class="font-body text-body text-on-surface-variant">2,491,032 Monthly Listeners</p>
+</div>
+<div class="flex items-center gap-md">
+<button class="w-[56px] h-[56px] rounded-full bg-primary flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-[0_0_20px_rgba(208,188,255,0.3)]">
+<span class="material-symbols-outlined text-on-primary text-3xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="px-xl py-sm rounded-full border border-outline text-on-surface font-song-title text-song-title hover:bg-surface-variant transition-colors">
+                        Follow
+                    </button>
+<button class="w-[40px] h-[40px] rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-margin-desktop md:p-xl max-w-7xl mx-auto flex flex-col gap-xxl">
+<!-- Popular Tracks Section -->
+<section>
+<h2 class="font-h2 text-h2 text-on-surface mb-lg">Popular</h2>
+<div class="flex flex-col gap-xs">
+<!-- Track Row -->
+<div class="h-[56px] flex items-center px-sm rounded-lg hover:bg-surface-container-high transition-colors group cursor-pointer">
+<div class="w-8 flex justify-center text-on-surface-variant font-label-sm text-label-sm group-hover:hidden">1</div>
+<div class="w-8 justify-center hidden group-hover:flex">
+<span class="material-symbols-outlined text-primary text-xl">play_arrow</span>
+</div>
+<img class="w-[40px] h-[40px] rounded object-cover ml-sm" data-alt="A minimalist, abstract album cover art featuring deep space textures, dark charcoal background with a single glowing electric violet geometric sphere. High contrast, clean, modern hi-fi aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7_1jGa1-VTR8zrZbekDnlDjZRs1kewlqqOMcOellW_xG9lpLL277529Fnq4OVavYC86X6H3l8k-ASHvHWV06BvGOPgCKuscaXleGTENL4QUk-iwR6u5yS1tXotenCpP6LOzYsZXPJyUX5RBkJOTzCGQuDbD1e4DZdMKvE5E9tIIgqPrXecC4gqCqjmz0kcYNF1zIvSlHs_F569MUkwiywiU4x0WbphRx8N3SJX_rACnu_bZG-UcQ"/>
+<div class="ml-md flex-1 overflow-hidden">
+<div class="font-song-title text-song-title text-on-surface truncate">Neon Nights</div>
+</div>
+<div class="text-on-surface-variant font-artist-name text-artist-name hidden sm:block w-1/3">94,302,110</div>
+<div class="text-on-surface-variant font-artist-name text-artist-name mr-lg">3:42</div>
+</div>
+<!-- Track Row -->
+<div class="h-[56px] flex items-center px-sm rounded-lg hover:bg-surface-container-high transition-colors group cursor-pointer">
+<div class="w-8 flex justify-center text-on-surface-variant font-label-sm text-label-sm group-hover:hidden">2</div>
+<div class="w-8 justify-center hidden group-hover:flex">
+<span class="material-symbols-outlined text-primary text-xl">play_arrow</span>
+</div>
+<img class="w-[40px] h-[40px] rounded object-cover ml-sm" data-alt="A minimalist, abstract album cover art featuring deep space textures, dark charcoal background with a single glowing secondary green geometric sphere. High contrast, clean, modern hi-fi aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFFfrON311cT5Jv7meS9goPNi-YFrKfopRGhz7kqX5z2OgzTEHnbn3F-jG05ybU0CqSbY_1fk2gdhf-ARQSbPZIM_6GUqLg-xQgK7I7M885s5yjl1jJSFG9IYswC6-F4cxTBkg_4Wb6i0-TVKFR0VIgQgJ_Nvo-FLuGuPVjyAAVV7lCqjLY5Lu5L2wzVBVZXMfNo_pE8J6rqkg-JfVd5IVTr8NZH6ir2FnP4s6VDlpY-9BfapofAk"/>
+<div class="ml-md flex-1 overflow-hidden">
+<div class="font-song-title text-song-title text-on-surface truncate">Lost in the Reverb</div>
+</div>
+<div class="text-on-surface-variant font-artist-name text-artist-name hidden sm:block w-1/3">78,110,432</div>
+<div class="text-on-surface-variant font-artist-name text-artist-name mr-lg">4:15</div>
+</div>
+<!-- Track Row -->
+<div class="h-[56px] flex items-center px-sm rounded-lg hover:bg-surface-container-high transition-colors group cursor-pointer">
+<div class="w-8 flex justify-center text-on-surface-variant font-label-sm text-label-sm group-hover:hidden">3</div>
+<div class="w-8 justify-center hidden group-hover:flex">
+<span class="material-symbols-outlined text-primary text-xl">play_arrow</span>
+</div>
+<img class="w-[40px] h-[40px] rounded object-cover ml-sm" data-alt="A minimalist, abstract album cover art featuring deep space textures, dark charcoal background with a single glowing tertiary orange geometric sphere. High contrast, clean, modern hi-fi aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbTBDJM7YnR_OS49mg2bSw6XZntNkdExuN5cYsR7wY541xGOwdWEdGxrpWjLDZMdQbXMtVUINFLFpZ1yS6FOOqgOao8t9wSz7Qn15EfXCEXDLlY_gGPaEmcIg9IpH4ZtN_t1Sf-Ptq9lRndhO4sj2qjFhNJ7XtL39Fkvx2DFui-3nqV9UEywX79j26mWhpVC3JXJVzNS_jo4JtMl0EGIW-bpzRica0-GRr5VvwkHKPqzGh8UGcgM8"/>
+<div class="ml-md flex-1 overflow-hidden">
+<div class="font-song-title text-song-title text-on-surface truncate">Analog Dreams</div>
+</div>
+<div class="text-on-surface-variant font-artist-name text-artist-name hidden sm:block w-1/3">65,992,001</div>
+<div class="text-on-surface-variant font-artist-name text-artist-name mr-lg">2:58</div>
+</div>
+</div>
+<button class="mt-md px-sm py-xs text-on-surface-variant font-label-sm text-label-sm hover:text-on-surface transition-colors uppercase tracking-wider">See More</button>
+</section>
+<!-- Discography Bento Grid -->
+<section>
+<h2 class="font-h2 text-h2 text-on-surface mb-lg">Discography</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-md md:gap-lg">
+<!-- Album Card -->
+<div class="bg-surface-container-low rounded-xl p-md hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="relative w-full aspect-square rounded-lg overflow-hidden mb-md shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Moody, minimalist album cover for a synthwave artist. Deep blacks, sharp geometric electric violet lines cutting across the darkness. High-end, premium aesthetic, tactile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCji1u88NBlmX-h3_T1kddoahUtFz3LrqMR9koNdxSGI8PhnVFCSHTfex3PYRtmpVv-avzwW6ZyedXhSHhkOBSbynEXO1m7_tLcbPRMtG2cIzBysgKLQMYB5LhgxHo3Fx5ibGnGAgwBTKKvFu0y9femfZtU00Hm4c8uUOdHTK34ffjXoBlcz_dyFd4k63EtAV4L9R4gMVTh33FX8HMSYa0sx-YUGeTbWFObLdud5m2g81CNexSeiNo"/>
+<div class="absolute bottom-2 right-2 w-10 h-10 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<h3 class="font-song-title text-song-title text-on-surface truncate">Midnight Architecture</h3>
+<p class="font-artist-name text-artist-name text-on-surface-variant truncate">2023 • Album</p>
+</div>
+<!-- Album Card -->
+<div class="bg-surface-container-low rounded-xl p-md hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="relative w-full aspect-square rounded-lg overflow-hidden mb-md shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Minimalist electronic album cover. Abstract texture resembling dark concrete, with a subtle glowing secondary green pulse radiating from the center. Atmospheric, dark mode design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATcfrhc2qDJ8QObvqKsdvha9C5ISk3ffKStzbD55o-Be6brwW-IopaYTy6Mzn1UJsSBCSMhIQV101XkpY56Y92SyLVXwGKSjkHqOqRvmcTg5ueauEnF4Iw_aSulHnOcuahz8cLNCQAzy8QuQwFRxvgOsvm5Rw0qkagJhEqQp1NqtbfFj0A9O7gn9V9Q5F9UP0dB5UOu8DjWxnDIoMAtX9ZONaZYk9lYkiBHd5n-IiZMS-boPhpoKY"/>
+<div class="absolute bottom-2 right-2 w-10 h-10 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<h3 class="font-song-title text-song-title text-on-surface truncate">Resonance</h3>
+<p class="font-artist-name text-artist-name text-on-surface-variant truncate">2021 • Album</p>
+</div>
+<!-- Album Card -->
+<div class="bg-surface-container-low rounded-xl p-md hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="relative w-full aspect-square rounded-lg overflow-hidden mb-md shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Sophisticated album artwork. A monochromatic charcoal gradient with a striking, sharp electric violet slash across the middle. Feels like premium hi-fi packaging." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD35KYLQ7O0lUjgOqkqkabRHwBHhlyR76ULuidtZtQTuY7b9h6sYBp2Oo4B7qt5HhobW0_kmw1UFVfJMZXekJ7WGHTgdw94VOiyVj82d0FjGmzChQQHo9CRjzmFpI0wtk3jcrJYYSHs7mZ7uO5auE8fDC2SuwcWC-uL4gLF_xFPqXB_goseUagzj7SJq3jp_CbzDH78nmcskKvIeVTrpaV7mKFPkBRjXwmF8_oOCRHQZ2j9ZpqgAsE"/>
+<div class="absolute bottom-2 right-2 w-10 h-10 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<h3 class="font-song-title text-song-title text-on-surface truncate">Fractured Light</h3>
+<p class="font-artist-name text-artist-name text-on-surface-variant truncate">2019 • EP</p>
+</div>
+<!-- Album Card -->
+<div class="bg-surface-container-low rounded-xl p-md hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="relative w-full aspect-square rounded-lg overflow-hidden mb-md shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Dark, moody album art. A single, glowing white wireframe cube suspended over a deep void. Minimalist, architectural, reflecting a sense of isolation and focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRtHtXNTET8hZHNfeiyrEbgxOCytjxUC-wklC6oVWT6rerTqKNtMYfWQbOWsUoDWeiroF1ihtK1wx3F1bnD_Em4GPMS3S5OyyC9S3vgh7cGAVIQSoQxZeqFw0q8uDlycSx3qDR5u9bYX0mp_bFrpHKwd-bmvjF3f48lImT_kY2iYlGwzhVeNS-ngTTbqwL-wohCR10bcpjgh4tpu5iyD292FCE366raiNV6rVaAQfPVIP1CYO9N7k"/>
+<div class="absolute bottom-2 right-2 w-10 h-10 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<h3 class="font-song-title text-song-title text-on-surface truncate">The Void Stares Back</h3>
+<p class="font-artist-name text-artist-name text-on-surface-variant truncate">2018 • Album</p>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Zone 3: Now Playing / Social Sidebar (Fixed, 320px) -->
+<aside class="fixed right-0 top-0 h-full w-[320px] bg-surface-container-lowest border-l border-surface-variant p-lg hidden xl:flex flex-col z-30">
+<h3 class="font-h3 text-h3 text-on-surface mb-lg">Now Playing</h3>
+<div class="flex-1 flex flex-col items-center justify-center text-center">
+<div class="w-full aspect-square rounded-xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.8)] mb-lg relative group">
+<img class="w-full h-full object-cover" data-alt="Close up of a premium turntable playing a record. Dark charcoal aesthetic with a subtle glint of light off the stylus. High-end hi-fi equipment vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHPJlPjjUdv79MMLmmwBKxqpyqKk4Ix5HwOdJ3AHaqWJdQ6NIjscOLCIoPqLOAIiGAUv-QrdYlhwla8-4lh-T5su6wquS9ZOnBXrh7k-f68Fq2Qus6kGYmOrSef8wovBLtLtQKRHiSPjDYr65W89QcdBKPfDwzOHEkieN-SUf-v4RVKI9UZCPURyG4jRXCb0PGhe5B52zr2ECepSfokfubuad2DNvlepz0BvgNdXvJ7Ce_jAi53t8"/>
+<div class="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-sm">
+<button class="self-end text-on-surface p-2 hover:bg-surface/50 rounded-full"><span class="material-symbols-outlined">open_in_full</span></button>
+</div>
+</div>
+<div class="w-full flex justify-between items-start mb-md">
+<div class="text-left flex-1 overflow-hidden">
+<h4 class="font-h2 text-h2 text-on-surface truncate">Neon Nights</h4>
+<p class="font-artist-name text-artist-name text-on-surface-variant truncate">Echoes in Static</p>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined">favorite_border</span>
+</button>
+</div>
+<!-- Custom Slider -->
+<div class="w-full mb-md group cursor-pointer">
+<div class="h-1 bg-surface-variant rounded-full w-full relative overflow-hidden">
+<div class="absolute left-0 top-0 h-full bg-primary w-1/3 rounded-full"></div>
+</div>
+<div class="flex justify-between mt-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>1:14</span>
+<span>3:42</span>
+</div>
+</div>
+<div class="flex items-center gap-lg text-on-surface">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined">shuffle</span></button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">skip_previous</span></button>
+<button class="w-[56px] h-[56px] rounded-full bg-primary flex items-center justify-center text-on-primary hover:scale-105 active:scale-95 transition-transform shadow-[0_0_15px_rgba(208,188,255,0.2)]">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">skip_next</span></button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined">repeat</span></button>
+</div>
+</div>
+</aside>
+<!-- Bottom Nav Bar (Mobile Only, 64px) -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-[64px] bg-surface/90 dark:bg-surface/90 backdrop-blur-md md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-variant rounded-lg p-2 w-16 h-14" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">home</span>
+<span class="font-label-sm text-label-sm mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary active:bg-surface-variant rounded-lg p-2 w-16 h-14" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">search</span>
+<span class="font-label-sm text-label-sm mt-1">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-variant rounded-lg p-2 w-16 h-14" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">subscriptions</span>
+<span class="font-label-sm text-label-sm mt-1">Library</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-variant rounded-lg p-2 w-16 h-14" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">workspace_premium</span>
+<span class="font-label-sm text-label-sm mt-1">Premium</span>
+</a>
+</nav>
+<!-- Mobile Mini Player (Persistent above bottom nav) -->
+<div class="fixed bottom-[64px] left-0 w-full bg-surface-container-high h-[56px] border-b border-surface-variant md:hidden flex items-center px-sm gap-sm z-40 mx-2 w-[calc(100%-16px)] mb-2 rounded-md shadow-lg">
+<img class="w-10 h-10 rounded" data-alt="Small thumbnail of neon nights album art. Minimalist deep space dark charcoal texture with glowing violet sphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_b1pp9FnBQb6CE2r1X7CCZppWaPdK4vyWscmjeLo9aYR9R4Qz1wOZwTlpbppYDCnh823WCnqIUBnX4gLFIXxLcQbcr7RD1gbKp11zaae1bA4N9-U-x4SGBBaQFL78g1fFJswTdGhoSpCUndkU0ku2yh_ncf8X-tRLDMSHtQDJVyG6dvLBc3l6Yly6eR8SsSnERYHW2zkhe4r3P3E2JWZZxhG1GZFKx_heZ8HEEYbTf7j6hfnB8Ss"/>
+<div class="flex-1 overflow-hidden">
+<h4 class="font-song-title text-song-title text-on-surface truncate text-sm">Neon Nights</h4>
+<p class="font-artist-name text-artist-name text-on-surface-variant truncate text-xs">Echoes in Static</p>
+</div>
+<button class="p-2 text-on-surface"><span class="material-symbols-outlined">favorite_border</span></button>
+<button class="p-2 text-on-surface"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span></button>
+</div>
+</body></html>

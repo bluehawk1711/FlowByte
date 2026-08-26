@@ -1,8 +1,9 @@
 import { AppColors } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import { useSelectionStore } from "@/hooks/store/selectionStore";
+import { isDownloaded } from "@/lib/offline";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SongActionsMenu } from "./SongActionsMenu";
 
@@ -26,6 +27,22 @@ const SongListItemComponent: React.FC<SongListItemProps> = ({
     song ? state.selectedIds.includes(song.id) : false,
   );
   const toggleSelection = useSelectionStore((state) => state.toggleSelection);
+
+  // Offline availability check
+  const [offlineAvailable, setOfflineAvailable] = useState(false);
+  useEffect(() => {
+    if (!song) return;
+    const apiSongId = song.apiSongId ?? (song.source === "api" ? song.id : null);
+    if (!apiSongId && !song.isDownloaded) {
+      setOfflineAvailable(song.source === "local" || !!song.localUri);
+      return;
+    }
+    let mounted = true;
+    void isDownloaded(apiSongId ?? song.id).then((d) => {
+      if (mounted) setOfflineAvailable(d || !!song.localUri);
+    });
+    return () => { mounted = false; };
+  }, [song]);
 
   const colors = useMemo(
     () => ({
@@ -119,6 +136,13 @@ const SongListItemComponent: React.FC<SongListItemProps> = ({
         </View>
 
         <View style={styles.rightSection}>
+          {offlineAvailable && (
+            <Ionicons
+              name="download"
+              size={14}
+              color={AppColors.accentCyan}
+            />
+          )}
           {isPlaying && (
             <Ionicons
               name="bar-chart"

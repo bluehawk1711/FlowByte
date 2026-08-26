@@ -54,6 +54,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="search/index"
+        options={{
+          title: "Search",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "search" : "search-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="cloud/index"
         options={{
           title: "Cloud",
@@ -64,6 +77,13 @@ export default function TabLayout() {
               color={color}
             />
           ),
+        }}
+      />
+      {/* Hidden screen for adding music */}
+      <Tabs.Screen
+        name="add-music/index"
+        options={{
+          href: null,
         }}
       />
       {/* Hidden screen for offline downloads */}

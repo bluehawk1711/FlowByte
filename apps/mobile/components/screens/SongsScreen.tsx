@@ -3,56 +3,90 @@ import { SongListItem } from "@/components/SongListItem";
 import { TabFilter } from "@/components/TabFilter";
 import { AppColors } from "@/constants/theme";
 import { Song } from "@/constants/types";
-import React, { useState } from "react";
+import useAudioContext from "@/hooks/store/audioContext";
+import { client } from "@/lib/api";
+import { toMobileSong } from "@/lib/sync";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { SongRowSkeleton } from "@/components/ui/Skeleton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const TABS = [
   { id: "all", label: "All Songs" },
-  { id: "playlists", label: "Playlists" },
   { id: "artists", label: "Artists" },
   { id: "albums", label: "Albums" },
 ];
 
-const SONGS: NonNullable<Song>[] = [
-  { id: "1", title: "Blinding Lights", artist: "The Weeknd", duration: 200, url: "" },
-  { id: "2", title: "Midnight City", artist: "M83", duration: 245, url: "" },
-  { id: "3", title: "Instant Crush", artist: "Daft Punk", duration: 337, url: "" },
-  { id: "4", title: "Starboy", artist: "The Weeknd", duration: 230, url: "" },
-  { id: "5", title: "Levitating", artist: "Dua Lipa", duration: 203, url: "" },
-  { id: "6", title: "Running Up That Hill", artist: "Kate Bush", duration: 298, url: "" },
-];
-
-interface SongsScreenProps {
-  onSongPress?: (songId: string) => void;
-  onMiniPlayerPress?: () => void;
-  onSortPress?: () => void;
-}
-
-export const SongsScreen: React.FC<SongsScreenProps> = ({
-  onSongPress,
-  onMiniPlayerPress,
-  onSortPress,
-}) => {
+export const SongsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { playList } = useAudioContext();
+  const currentSong = useAudioContext((s) => s.song);
+  const isPlaying = useAudioContext((s) => s.isPlaying);
+
+  const [songs, setSongs] = useState<NonNullable<Song>[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
-  const [currentSongId, setCurrentSongId] = useState("2");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!client) return;
+        const res = await client.getSongs({ pageSize: 200 });
+        if (!cancelled) setSongs(res.items.map(toMobileSong).filter(Boolean) as NonNullable<Song>[]);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load songs");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleSongPress = useCallback(
+    (song: NonNullable<Song>) => {
+      const index = songs.findIndex((s) => s?.id === song.id);
+      playList(songs, index >= 0 ? index : 0);
+      router.push("/(tabs)/playing");
+    },
+    [songs, playList, router],
+  );
+
+  const renderSong = useCallback(
+    ({ item }: { item: NonNullable<Song> }) => (
+      <SongListItem
+        song={item}
+        isActive={currentSong?.id === item.id}
+        isPlaying={currentSong?.id === item.id && isPlaying}
+        onPress={handleSongPress}
+      />
+    ),
+    [currentSong, isPlaying, handleSongPress],
+  );
+
+  const keyExtractor = useCallback(
+    (item: NonNullable<Song>, index: number) => item.id || String(index),
+    [],
+  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Songs</Text>
-        <TouchableOpacity style={styles.sortButton} onPress={onSortPress}>
-          <Text style={styles.sortIcon}>A</Text>
-          <Text style={styles.sortIconZ}>Z</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <Ionicons name="musical-notes" size={20} color={AppColors.accentCyan} />
+          <Text style={styles.songCount}>{songs.length}</Text>
+        </View>
       </View>
 
       {/* Tabs */}
@@ -61,33 +95,42 @@ export const SongsScreen: React.FC<SongsScreenProps> = ({
         activeTabId={activeTab}
         onTabChange={setActiveTab}
         variant="chip"
-        lightTheme={true}
       />
 
-      {/* Song List */}
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
-      >
-        {SONGS.map((song) => (
-          <SongListItem
-            key={song.id}
-            song={song}
-            isActive={song.id === currentSongId}
-            isPlaying={song.id === currentSongId}
-            onPress={() => {
-              setCurrentSongId(song.id);
-              onSongPress?.(song.id);
-            }}
-            lightTheme={true}
-          />
-        ))}
-      </ScrollView>
+      {/* Content */}
+      {loading ? (
+        <View style={styles.skeletonContainer}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SongRowSkeleton key={i} delay={i * 40} />
+          ))}
+        </View>
+      ) : error ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="alert-circle-outline" size={44} color={AppColors.textSecondary} />
+          <Text style={styles.emptyText}>{error}</Text>
+        </View>
+      ) : songs.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="musical-notes-outline" size={44} color={AppColors.textSecondary} />
+          <Text style={styles.emptyText}>No songs yet</Text>
+          <Text style={styles.emptySubtext}>
+            Add music from YouTube or sync your cloud library.
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={songs}
+          renderItem={renderSong}
+          keyExtractor={keyExtractor}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          extraData={[currentSong]}
+        />
+      )}
 
       {/* Mini Player */}
       <View style={styles.miniPlayerContainer}>
-        <MiniPlayer lightTheme={true} />
+        <MiniPlayer showHeart />
       </View>
     </View>
   );
@@ -96,7 +139,7 @@ export const SongsScreen: React.FC<SongsScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.backgroundLight,
+    backgroundColor: AppColors.backgroundDark,
   },
   header: {
     flexDirection: "row",
@@ -106,28 +149,42 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
-    color: AppColors.textLight,
+    color: AppColors.textPrimary,
   },
-  sortButton: {
+  headerRight: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
+    gap: 6,
   },
-  sortIcon: {
+  songCount: {
+    fontSize: 14,
+    color: AppColors.textSecondary,
+  },
+  skeletonContainer: {
+    flex: 1,
+    paddingTop: 8,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 40,
+  },
+  emptyText: {
     fontSize: 16,
     fontWeight: "600",
-    color: AppColors.accentCyan,
+    color: AppColors.textPrimary,
   },
-  sortIconZ: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: AppColors.accentCyan,
-    marginTop: 4,
+  emptySubtext: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
+    textAlign: "center",
   },
-  scrollView: {
-    flex: 1,
-    marginTop: 8,
+  listContent: {
+    paddingBottom: 120,
   },
   miniPlayerContainer: {
     position: "absolute",

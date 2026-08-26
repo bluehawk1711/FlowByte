@@ -1,77 +1,150 @@
-import { AlbumCard } from "@/components/AlbumCard";
+import { MiniPlayer } from "@/components/MiniPlayer";
 import { AppColors } from "@/constants/theme";
+import useAudioContext from "@/hooks/store/audioContext";
+import { client } from "@/lib/api";
+import { toMobileSong } from "@/lib/sync";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  Dimensions,
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { AlbumCardSkeleton } from "@/components/ui/Skeleton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const ALBUMS = [
-  { id: "1", title: "Midnight Vibes", artist: "The Night Owls" },
-  { id: "2", title: "Neon Dreams", artist: "Cyber Artists" },
-  { id: "3", title: "Echoes of Silence", artist: "Silent Poets" },
-  { id: "4", title: "Geometric Beats", artist: "Shape Shifters" },
-  { id: "5", title: "Minimalist Sound", artist: "Pure Tones" },
-  { id: "6", title: "Retro Wave", artist: "Synth Masters" },
-  { id: "7", title: "Deep Ocean", artist: "Blue Whales" },
-  { id: "8", title: "Monolith", artist: "Stone Circle" },
-];
+const { width } = Dimensions.get("window");
+const CARD_WIDTH = (width - 48) / 2;
 
-interface AlbumsScreenProps {
-  onAlbumPress?: (albumId: string) => void;
-  onSearchPress?: () => void;
-  onShufflePress?: () => void;
+interface Album {
+  id: string;
+  name: string;
+  artistName?: string;
+  artworkUrl?: string;
+  songCount?: number;
+  releaseYear?: number;
 }
 
-export const AlbumsScreen: React.FC<AlbumsScreenProps> = ({
-  onAlbumPress,
-  onSearchPress,
-  onShufflePress,
-}) => {
+export const AlbumsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { playList } = useAudioContext();
+  const currentSong = useAudioContext((s) => s.song);
+
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!client) return;
+        const data = await client.getAlbums();
+        if (!cancelled) setAlbums(data.map((a) => ({
+          id: a.id,
+          name: a.name,
+          artistName: a.artistName ?? undefined,
+          artworkUrl: a.artworkUrl ?? undefined,
+          releaseYear: a.releaseYear ?? undefined,
+        })));
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load albums");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const playAlbum = useCallback(
+    async (album: Album) => {
+      try {
+        if (!client) return;
+        const detail = await client.getAlbum(album.id);
+        const songs = detail.songs.map(toMobileSong).filter(Boolean);
+        if (songs.length > 0) {
+          playList(songs, 0);
+          router.push("/(tabs)/playing");
+        }
+      } catch {
+        // Album detail fetch failed
+      }
+    },
+    [playList, router],
+  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Albums</Text>
-        <TouchableOpacity style={styles.searchButton} onPress={onSearchPress}>
-          <Ionicons name="search" size={24} color={AppColors.textPrimary} />
-        </TouchableOpacity>
       </View>
 
-      {/* Album Grid */}
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.gridContent}
-      >
-        <View style={styles.grid}>
-          {ALBUMS.map((album) => (
-            <AlbumCard
-              key={album.id}
-              title={album.title}
-              artist={album.artist}
-              onPress={() => onAlbumPress?.(album.id)}
-            />
+      {/* Content */}
+      {loading ? (
+        <View style={styles.skeletonGrid}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <View key={i} style={styles.card}>
+              <AlbumCardSkeleton delay={i * 50} />
+            </View>
           ))}
         </View>
-      </ScrollView>
+      ) : error ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="alert-circle-outline" size={44} color={AppColors.textSecondary} />
+          <Text style={styles.emptyText}>{error}</Text>
+        </View>
+      ) : albums.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="disc-outline" size={44} color={AppColors.textSecondary} />
+          <Text style={styles.emptyText}>No albums yet</Text>
+          <Text style={styles.emptySubtext}>
+            Albums are created automatically when songs have album metadata.
+          </Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.gridContent}
+        >
+          <View style={styles.grid}>
+            {albums.map((album) => (
+              <Pressable
+                key={album.id}
+                style={styles.card}
+                onPress={() => playAlbum(album)}
+              >
+                {album.artworkUrl ? (
+                  <Image source={{ uri: album.artworkUrl }} style={styles.cover} />
+                ) : (
+                  <View style={[styles.cover, styles.placeholder]}>
+                    <Ionicons name="disc" size={32} color={AppColors.textSecondary} />
+                  </View>
+                )}
+                <Text style={styles.albumTitle} numberOfLines={1}>
+                  {album.name}
+                </Text>
+                <Text style={styles.albumArtist} numberOfLines={1}>
+                  {album.artistName ?? "Unknown Artist"}
+                  {album.releaseYear ? ` · ${album.releaseYear}` : ""}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </ScrollView>
+      )}
 
-      {/* Shuffle FAB */}
-      <TouchableOpacity
-        style={styles.shuffleButton}
-        onPress={onShufflePress}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="shuffle" size={20} color={AppColors.textLight} />
-        <Text style={styles.shuffleText}>Shuffle</Text>
-      </TouchableOpacity>
+      {/* Mini Player */}
+      <View style={styles.miniPlayerContainer}>
+        <MiniPlayer />
+      </View>
     </View>
   );
 };
@@ -93,41 +166,73 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: AppColors.textPrimary,
   },
-  searchButton: {
-    padding: 8,
+  skeletonGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 120,
+    justifyContent: "space-between",
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: AppColors.textPrimary,
+  },
+  emptySubtext: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
+    textAlign: "center",
   },
   scrollView: {
     flex: 1,
   },
   gridContent: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
-  shuffleButton: {
-    position: "absolute",
-    bottom: 90,
-    right: 24,
-    backgroundColor: AppColors.accentCyan,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 30,
-    gap: 8,
-    shadowColor: AppColors.accentCyan,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
+  card: {
+    width: CARD_WIDTH,
+    marginBottom: 20,
   },
-  shuffleText: {
+  cover: {
+    width: CARD_WIDTH,
+    height: CARD_WIDTH,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  placeholder: {
+    backgroundColor: "#2A2A2A",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  albumTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: AppColors.textLight,
+    color: AppColors.textPrimary,
+  },
+  albumArtist: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
+    marginTop: 2,
+  },
+  miniPlayerContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 8,
   },
 });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from './button';
@@ -9,12 +9,14 @@ export function Dialog({
   title,
   children,
   className,
+  widthClass = 'max-w-md',
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
   className?: string;
+  widthClass?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -24,6 +26,7 @@ export function Dialog({
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
+    ref.current?.focus();
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
@@ -32,21 +35,26 @@ export function Dialog({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop backdrop-blur-sm"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) close();
       }}
     >
       <div
         ref={ref}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className={cn(
-          'w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900 p-5 shadow-xl',
+          'w-full rounded-xl border border-line bg-elevated p-5 shadow-elev-3 outline-none',
+          widthClass,
           className,
         )}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-zinc-100">{title}</h2>
-          <Button variant="ghost" size="icon" onClick={close} aria-label="Close">
+          <h2 className="text-base font-semibold text-ink-1">{title}</h2>
+          <Button variant="ghost" size="icon-sm" onClick={close} aria-label="Close">
             <X className="h-4 w-4" />
           </Button>
         </div>

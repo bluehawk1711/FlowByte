@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Input } from '../components/ui/card';
+import { Input } from '../components/ui/input';
 
 export function AuthPage() {
   const { login, register } = useAuth();
@@ -32,14 +32,14 @@ export function AuthPage() {
   };
 
   return (
-    <div className="flex h-full items-center justify-center bg-zinc-950">
+    <div className="flex h-full items-center justify-center bg-app">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center gap-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
             <Music2 className="h-6 w-6 text-white" />
           </div>
           <CardTitle className="text-xl">Flowbyte</CardTitle>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-ink-2">
             {mode === 'login' ? 'Sign in to your library' : 'Create your personal library'}
           </p>
         </CardHeader>
@@ -84,7 +84,7 @@ export function AuthPage() {
           </form>
           <button
             type="button"
-            className="mt-4 w-full text-center text-sm text-blue-400 hover:underline"
+            className="mt-4 w-full text-center text-sm text-accent hover:underline"
             onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
           >
             {mode === 'login' ? 'No account? Create one' : 'Have an account? Sign in'}

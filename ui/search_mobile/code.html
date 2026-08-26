@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura - Search</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#0b1326",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#00a572",
+                        "tertiary-container": "#ca801e",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-tertiary-container": "#3f2300",
+                        "surface-container-high": "#222a3d",
+                        "on-primary-fixed": "#23005c",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#cbc3d7",
+                        "surface-variant": "#2d3449",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-primary-fixed-variant": "#5516be",
+                        "outline-variant": "#494454",
+                        "inverse-on-surface": "#283044",
+                        "surface": "#0b1326",
+                        "on-primary-container": "#340080",
+                        "secondary-fixed-dim": "#4edea3",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-secondary-fixed": "#002113",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "tertiary": "#ffb869",
+                        "primary-fixed": "#e9ddff",
+                        "primary-container": "#a078ff",
+                        "on-primary": "#3c0091",
+                        "surface-container-highest": "#2d3449",
+                        "surface-bright": "#31394d",
+                        "surface-container-low": "#131b2e",
+                        "tertiary-fixed": "#ffdcbb",
+                        "primary": "#d0bcff",
+                        "surface-container": "#171f33",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "on-surface": "#dae2fd",
+                        "on-background": "#dae2fd",
+                        "secondary": "#4edea3",
+                        "outline": "#958ea0",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "inverse-surface": "#dae2fd",
+                        "surface-tint": "#d0bcff",
+                        "on-secondary": "#003824",
+                        "on-tertiary": "#482900",
+                        "background": "#0b1326",
+                        "surface-container-lowest": "#060e20",
+                        "primary-fixed-dim": "#d0bcff",
+                        "inverse-primary": "#6d3bd7",
+                        "on-secondary-container": "#00311f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "huge": "64px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "xxl": "48px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "margin-desktop": "32px",
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "safe": "env(safe-area-inset-bottom)"
+                    },
+                    "fontFamily": {
+                        "artist-name": ["Hanken Grotesk"],
+                        "body": ["Hanken Grotesk"],
+                        "h3": ["Hanken Grotesk"],
+                        "h2": ["Hanken Grotesk"],
+                        "display-lg-mobile": ["Hanken Grotesk"],
+                        "h1": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "song-title": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "artist-name": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "h2": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "h1": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "song-title": ["16px", {"lineHeight": "24px", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body antialiased md:hidden h-screen flex flex-col">
+<!-- Search Header -->
+<header class="pt-12 px-margin-mobile pb-sm bg-surface sticky top-0 z-40">
+<h1 class="font-display-lg-mobile text-display-lg-mobile font-bold text-primary mb-md">Search</h1>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low text-on-surface placeholder:text-on-surface-variant rounded-full py-3 pl-12 pr-4 border-none focus:ring-2 focus:ring-primary focus:bg-surface-container font-body text-body transition-colors outline-none shadow-none" placeholder="Artists, songs, or podcasts" type="text"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto hide-scrollbar px-margin-mobile pb-[80px]">
+<!-- Recent Searches -->
+<section class="mt-lg mb-xl">
+<h2 class="font-h3 text-h3 text-on-surface mb-md">Recent searches</h2>
+<div class="flex flex-col gap-xs">
+<a class="flex items-center gap-md py-sm hover:bg-surface-variant rounded-lg transition-colors -mx-sm px-sm group" href="#">
+<img class="w-[48px] h-[48px] rounded-full object-cover" data-alt="A small, high-contrast monochrome portrait of a fictional indie electronic music artist, cinematic lighting, dark mode aesthetic, intense focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu-BgVbeowKRoiTvfo-Wrpqxz-ZPWgQGbSE83mhEvut4QjnfkmD37BxpLFJZfHi4F-3WGVJWngnBue9tnsIPmQTPMh1PL8gQrph9yG0xcZ5c7L5CLNwY_K85mAKpk0nGhfZySw5hqAc7jPHjPQbepw4QY3HKnWBGexSw1vViQJXhhi3_oLgSb93mh0R6axJsMDzsV-P4qHm8-AKqd9upY9sVujs_CPaJfc8nDBOiiWb9EU9cR1s7k"/>
+<div class="flex-1">
+<p class="font-song-title text-song-title text-on-surface">Echoes of Silence</p>
+<p class="font-artist-name text-artist-name text-on-surface-variant">Artist</p>
+</div>
+<button class="text-on-surface-variant opacity-50 group-hover:opacity-100 transition-opacity p-2">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</a>
+<a class="flex items-center gap-md py-sm hover:bg-surface-variant rounded-lg transition-colors -mx-sm px-sm group" href="#">
+<div class="w-[48px] h-[48px] rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="music_note">music_note</span>
+</div>
+<div class="flex-1">
+<p class="font-song-title text-song-title text-on-surface">Midnight City Vibes</p>
+<p class="font-artist-name text-artist-name text-on-surface-variant">Playlist</p>
+</div>
+<button class="text-on-surface-variant opacity-50 group-hover:opacity-100 transition-opacity p-2">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</a>
+</div>
+</section>
+<!-- Browse All (Bento Grid) -->
+<section class="mb-xxl">
+<h2 class="font-h3 text-h3 text-on-surface mb-md">Browse all</h2>
+<div class="grid grid-cols-2 gap-sm">
+<a class="relative overflow-hidden rounded-lg aspect-[4/3] bg-surface-container-high group block" href="#">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" data-alt="Abstract visualization of pop music, bright neon colors bleeding into deep blacks, energetic dynamic shapes, atmospheric lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXSw1_hsWP2Zz2eW1ruNf5LLpR9eUMeGU0qexcQwrnVlosEaEYYtvzS3TA3PuYESx3AB3mbJanJrNNvhjYPQlN-fWZ3AiL1hS2mB7w6JT0umTYGshKtfviPmEB0Y1u8YmtcMnSot4Jbufj6-dTNUjTU_8HS0Nre_WziMnpprhVhWxwDliAQrwiPMw0LD0gKYzXPp3EjPXz3c8cN4k7LUn0-E__YL1Z_2N0AM09cAHDQOOuKXcCMfw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim/80 to-transparent"></div>
+<span class="absolute bottom-sm left-sm font-h3 text-h3 text-on-surface font-bold drop-shadow-md">Pop</span>
+</a>
+<a class="relative overflow-hidden rounded-lg aspect-[4/3] bg-surface-container-high group block" href="#">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" data-alt="Abstract visual representation of electronic music, sharp geometric patterns, deep purples and blues, digital interference aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1YA9KIyidiuoom47iJYF9jLJfOQ2NA9wIMcC78JUPfTler3UbOMJ-Xw6TK3Zx8NukRtxhyZN9oPs5NRAkSncBddWmbpxHFOGIEsmk46W4h4bAZ8NS91TfQt5DwPoE7PyRtvx6uTmtzQPtt8YHc0ZWR5zhfXX63GrZHVZAYLXAmCahDt6eT1ZrsaTjJ5ePl4vMHCWUmIWs7gqXpoqQxQLIJWQ2r8f5Zpv_h7rLY3tyws4XMcGAUKY"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim/80 to-transparent"></div>
+<span class="absolute bottom-sm left-sm font-h3 text-h3 text-on-surface font-bold drop-shadow-md">Electronic</span>
+</a>
+<a class="relative overflow-hidden rounded-lg aspect-[4/3] bg-surface-container-high group block" href="#">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" data-alt="Gritty abstract representation of rock music, dark charcoal tones with sudden strikes of warm amber, textured physical feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWLRXuQFQV-gH127ptB4DVk5CuvsAAlQc64SizpBij9f4FSvHlSzSdhD42WhitOqZa9ydnUuuVrtLEE05rNSFVCRiTXajHnttHLx6U4dfhLnlZ5Lcjhrx4A579YC6svt0w1owQ8LQQm6y17f2VmwmujAVoRTxQ8IEYCMqwQb-w2AAn-SSlWU6kFOXK-4y0TorePlgsGFNpakjYbqTdfMnF_9Irg9MDzmziSAjZW6IEN7TSod95R2Y"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim/80 to-transparent"></div>
+<span class="absolute bottom-sm left-sm font-h3 text-h3 text-on-surface font-bold drop-shadow-md">Rock</span>
+</a>
+<a class="relative overflow-hidden rounded-lg aspect-[4/3] bg-surface-container-high group block" href="#">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" data-alt="Serene visual for ambient music, soft glowing gradients blending deep blue into charcoal, smooth out of focus elements." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCf4STmGkxJRedCGq6E0m1TZXKOe_Oxx8hbzJbE7XDsS7hRwClSUd1OkIFN7cx90foGcb4DiDs55UhppjWZB_gBYtuxV13HP4GGal0Zy-NN93QPoqj638XAy0sfBbrnp6L6YngT8uu1kMTjhqWtGdNLWCDIk1D_drDJRhPnmSfLUmJATVmyNtOpsmKi_OToPKATl8X2chY9opSBz8J6QKsOI_rpsbDdsuAboajLTt_m3nxQdfy7WFc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim/80 to-transparent"></div>
+<span class="absolute bottom-sm left-sm font-h3 text-h3 text-on-surface font-bold drop-shadow-md">Ambient</span>
+</a>
+<a class="relative overflow-hidden rounded-lg aspect-[4/3] bg-surface-container-high group block col-span-2" href="#">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" data-alt="Dynamic and vibrant visualization of global music rhythms, sweeping curves of color against a dark void, motion blur." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRSjEg7VBG60zXJ8VyJF5Utg5NTJ6xGlnaAJVCBEHjRG16ZAmMAtqQzu8oDZcHH0iml8smlcoAK3NUfc8YT1iFflbxpGgJoy38cjr3VhC669NjCVCC0WcP4BANTKdX84kCX57SAO4N5oaP3uvShrSP-bpy1B1vWfd6ODCLMo3bdunewMT7UYQhe-CU3d-8E-zQR53smTtPzl5GSzvvLdc3kYnDHgIGwFuTLru_e9a6Hn5p8HQelTs"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim/80 to-transparent"></div>
+<span class="absolute bottom-sm left-sm font-h3 text-h3 text-on-surface font-bold drop-shadow-md">New Releases</span>
+</a>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 h-[64px] bg-surface/90 dark:bg-surface/90 backdrop-blur-md pb-safe">
+<div class="flex justify-around items-center px-4 h-full">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface active:bg-surface-variant transition-all active:scale-95 py-sm px-md rounded-xl" href="#">
+<span class="material-symbols-outlined mb-[2px]" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary active:bg-surface-variant transition-all active:scale-95 py-sm px-md rounded-xl" href="#">
+<span class="material-symbols-outlined mb-[2px]" data-icon="search" data-weight="fill" style="font-variation-settings: 'FILL' 1;">search</span>
+<span class="font-label-sm text-label-sm">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface active:bg-surface-variant transition-all active:scale-95 py-sm px-md rounded-xl" href="#">
+<span class="material-symbols-outlined mb-[2px]" data-icon="subscriptions">subscriptions</span>
+<span class="font-label-sm text-label-sm">Library</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface active:bg-surface-variant transition-all active:scale-95 py-sm px-md rounded-xl" href="#">
+<span class="material-symbols-outlined mb-[2px]" data-icon="workspace_premium">workspace_premium</span>
+<span class="font-label-sm text-label-sm">Premium</span>
+</a>
+</div>
+</nav>
+</body></html>

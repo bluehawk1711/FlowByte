@@ -1,6 +1,7 @@
 import { AppColors } from "@/constants/theme";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
+import { client } from "@/lib/api";
 import { API_PREFIX } from "@/lib/sync";
 import {
   downloadSong,
@@ -10,10 +11,11 @@ import {
 } from "@/lib/offline";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  FlatList,
   Image,
   Pressable,
   StyleSheet,
@@ -25,7 +27,9 @@ import { Slider } from "react-native-awesome-slider";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { QueueSheet } from "../QueueSheet";
 import { SongActionsMenu } from "../SongActionsMenu";
+import type { NormalizedLyrics } from "@flowbyte/types";
 const { width } = Dimensions.get("window");
 const ARTWORK_SIZE = width - 64;
 
@@ -95,6 +99,64 @@ export const NowPlayingScreen = () => {
       setDownloading(false);
     }
   };
+
+  // --- Lyrics ---
+  const [lyrics, setLyrics] = useState<NormalizedLyrics | null>(null);
+  const [lyricsLoading, setLyricsLoading] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [showQueue, setShowQueue] = useState(false);
+  const lyricsFlatListRef = useRef<FlatList>(null);
+  const prevActiveLyricsRef = useRef<number>(-1);
+
+  useEffect(() => {
+    if (!apiSongId || !client) {
+      setLyrics(null);
+      return;
+    }
+    let cancelled = false;
+    setLyricsLoading(true);
+    setLyrics(null);
+    void client
+      .getLyrics(apiSongId)
+      .then((res) => {
+        if (!cancelled) setLyrics(res);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLyricsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [apiSongId]);
+
+  // Find active lyrics line based on current position
+  const getActiveLyricsIndex = useCallback((): number => {
+    if (!lyrics?.synced || !lyrics.lines.length) return -1;
+    const posMs = position; // position is already in ms from useAudioPro
+    let active = -1;
+    for (let i = 0; i < lyrics.lines.length; i++) {
+      if (posMs >= lyrics.lines[i].start) active = i;
+      else break;
+    }
+    return active;
+  }, [lyrics, position]);
+
+  const activeLyricsIndex = getActiveLyricsIndex();
+
+  // Auto-scroll to active line
+  useEffect(() => {
+    if (activeLyricsIndex < 0 || activeLyricsIndex === prevActiveLyricsRef.current) return;
+    prevActiveLyricsRef.current = activeLyricsIndex;
+    lyricsFlatListRef.current?.scrollToIndex({
+      index: activeLyricsIndex,
+      animated: true,
+      viewPosition: 0.4,
+    });
+  }, [activeLyricsIndex]);
+
+  // Reset active ref when lyrics change
+  useEffect(() => {
+    prevActiveLyricsRef.current = -1;
+  }, [lyrics]);
 
   // Slider values
   const progress = useSharedValue(0);
@@ -305,6 +367,87 @@ export const NowPlayingScreen = () => {
           </View>
         </Pressable>
       </View>
+
+      {/* Bottom actions row */}
+      <View style={styles.bottomTabs}>
+        {apiSongId && !lyricsLoading && lyrics && (
+          <Pressable
+            style={styles.bottomTab}
+            onPress={() => setShowLyrics((v) => !v)}
+          >
+            <Ionicons
+              name={showLyrics ? "chevron-down" : "mic"}
+              size={20}
+              color={AppColors.textSecondary}
+            />
+            <Text style={styles.bottomTabText}>
+              {showLyrics ? "Lyrics" : "Lyrics"}
+            </Text>
+          </Pressable>
+        )}
+        <Pressable
+          style={styles.bottomTab}
+          onPress={() => setShowQueue(true)}
+        >
+          <Ionicons name="list" size={20} color={AppColors.textSecondary} />
+          <Text style={styles.bottomTabText}>Queue</Text>
+        </Pressable>
+      </View>
+
+      <QueueSheet visible={showQueue} onDismiss={() => setShowQueue(false)} />
+
+      {/* Lyrics loading */}
+      {lyricsLoading && (
+        <View style={styles.lyricsLoadingContainer}>
+          <ActivityIndicator size="small" color={AppColors.accentCyan} />
+          <Text style={styles.lyricsLoadingText}>Loading lyrics…</Text>
+        </View>
+      )}
+
+      {/* Lyrics display */}
+      {showLyrics && lyrics && !lyricsLoading && (
+        <View style={styles.lyricsContainer}>
+          {lyrics.synced && lyrics.lines.length > 0 ? (
+            <FlatList
+              ref={lyricsFlatListRef}
+              data={lyrics.lines}
+              keyExtractor={(_, i) => String(i)}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.lyricsListContent}
+              renderItem={({ item: line, index: i }) => {
+                const isActive = i === activeLyricsIndex;
+                const isPast = activeLyricsIndex >= 0 && i < activeLyricsIndex;
+                return (
+                  <Text
+                    style={[
+                      styles.lyricsLine,
+                      isActive && styles.lyricsLineActive,
+                      isPast && styles.lyricsLinePast,
+                    ]}
+                  >
+                    {line.text}
+                  </Text>
+                );
+              }}
+            />
+          ) : !lyrics.synced && lyrics.lines.length > 0 ? (
+            <FlatList
+              data={lyrics.lines}
+              keyExtractor={(_, i) => String(i)}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.lyricsListContent}
+              renderItem={({ item: line }) => (
+                <Text style={styles.lyricsLineUnsynced}>{line.text}</Text>
+              )}
+            />
+          ) : (
+            <View style={styles.lyricsEmpty}>
+              <Ionicons name="mic-outline" size={28} color={AppColors.textSecondary} />
+              <Text style={styles.lyricsEmptyText}>No lyrics available</Text>
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 };
@@ -463,16 +606,21 @@ const styles = StyleSheet.create({
   bottomTabs: {
     flexDirection: "row",
     justifyContent: "center",
+    alignItems: "center",
     gap: 32,
+    paddingVertical: 8,
   },
   bottomTab: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     padding: 8,
   },
   bottomTabText: {
     fontSize: 12,
     fontWeight: "600",
     color: AppColors.textSecondary,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   bottomTabTextActive: {
     color: AppColors.textPrimary,
@@ -481,5 +629,66 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: AppColors.textSecondary,
     fontWeight: "500",
+  },
+  lyricsToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 4,
+  },
+  lyricsToggleText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: AppColors.accentCyan,
+  },
+  lyricsLoadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+  },
+  lyricsLoadingText: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
+  },
+  lyricsContainer: {
+    flex: 1,
+    marginTop: 8,
+    paddingHorizontal: 24,
+  },
+  lyricsListContent: {
+    paddingBottom: 20,
+  },
+  lyricsLine: {
+    fontSize: 16,
+    color: AppColors.textSecondary,
+    paddingVertical: 4,
+    lineHeight: 24,
+  },
+  lyricsLineActive: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: AppColors.textPrimary,
+  },
+  lyricsLinePast: {
+    color: AppColors.textMuted,
+  },
+  lyricsLineUnsynced: {
+    fontSize: 16,
+    color: AppColors.textSecondary,
+    paddingVertical: 6,
+    lineHeight: 24,
+  },
+  lyricsEmpty: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  lyricsEmptyText: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
   },
 });

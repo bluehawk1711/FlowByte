@@ -9,6 +9,7 @@ export interface SavedYouTubeItem {
   playlistId: string | null;
   isPlaylist: boolean;
   title: string;
+  thumbnail?: string;
   savedAt: string;
 }
 
@@ -29,6 +30,7 @@ const useSaved = create<SavedState>()(
             {
               ...item,
               id: `yt-${Date.now().toString(36)}`,
+              thumbnail: item.thumbnail ?? (item.videoId ? `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg` : undefined),
               savedAt: new Date().toISOString(),
             },
             ...get().items,
@@ -74,6 +76,12 @@ export function parseYouTubeUrl(url: string): ParsedYouTubeUrl | null {
 
 export function isYouTubeUrl(url: string): boolean {
   return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/.test(url.trim());
+}
+
+/** Get YouTube thumbnail URL from video ID. */
+export function youtubeThumbnail(videoId: string | null, quality: "mq" | "hq" = "mq"): string | undefined {
+  if (!videoId) return undefined;
+  return `https://img.youtube.com/vi/${videoId}/${quality}default.jpg`;
 }
 
 export default useSaved;

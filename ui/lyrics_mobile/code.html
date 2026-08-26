@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura - Synchronized Lyrics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#0b1326",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#00a572",
+                        "tertiary-container": "#ca801e",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-tertiary-container": "#3f2300",
+                        "surface-container-high": "#222a3d",
+                        "on-primary-fixed": "#23005c",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#cbc3d7",
+                        "surface-variant": "#2d3449",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-primary-fixed-variant": "#5516be",
+                        "outline-variant": "#494454",
+                        "inverse-on-surface": "#283044",
+                        "surface": "#0b1326",
+                        "on-primary-container": "#340080",
+                        "secondary-fixed-dim": "#4edea3",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-secondary-fixed": "#002113",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "tertiary": "#ffb869",
+                        "primary-fixed": "#e9ddff",
+                        "primary-container": "#a078ff",
+                        "on-primary": "#3c0091",
+                        "surface-container-highest": "#2d3449",
+                        "surface-bright": "#31394d",
+                        "surface-container-low": "#131b2e",
+                        "tertiary-fixed": "#ffdcbb",
+                        "primary": "#d0bcff",
+                        "surface-container": "#171f33",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "on-surface": "#dae2fd",
+                        "on-background": "#dae2fd",
+                        "secondary": "#4edea3",
+                        "outline": "#958ea0",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "inverse-surface": "#dae2fd",
+                        "surface-tint": "#d0bcff",
+                        "on-secondary": "#003824",
+                        "on-tertiary": "#482900",
+                        "background": "#0b1326",
+                        "surface-container-lowest": "#060e20",
+                        "primary-fixed-dim": "#d0bcff",
+                        "inverse-primary": "#6d3bd7",
+                        "on-secondary-container": "#00311f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "huge": "64px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "xxl": "48px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "margin-desktop": "32px",
+                        "sm": "8px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "artist-name": ["Hanken Grotesk"],
+                        "body": ["Hanken Grotesk"],
+                        "h3": ["Hanken Grotesk"],
+                        "h2": ["Hanken Grotesk"],
+                        "display-lg-mobile": ["Hanken Grotesk"],
+                        "h1": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "song-title": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "artist-name": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "h3": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "h2": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "h1": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "song-title": ["16px", { "lineHeight": "24px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0; }
+        .material-symbols-fill { font-variation-settings: 'FILL' 1; }
+        
+        /* Custom UI Effects */
+        .lyric-glow { text-shadow: 0 0 32px rgba(208, 188, 255, 0.4); }
+        .fade-mask {
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+        }
+        
+        /* Hide scrollbar for cleaner look */
+        ::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface h-screen w-full overflow-hidden flex flex-col relative antialiased">
+<!-- Ambient Background Glow (Album Color Hint) -->
+<div class="absolute top-[-10%] left-[-10%] w-[120%] h-[60vh] bg-gradient-to-br from-primary/15 via-surface to-surface blur-3xl pointer-events-none z-0"></div>
+<!-- Header (Task-focused departure, standard nav suppressed) -->
+<header class="relative z-20 w-full flex justify-between items-center px-margin-mobile py-sm pt-safe h-[72px]">
+<button class="w-12 h-12 flex items-center justify-center text-on-surface hover:bg-surface-variant rounded-full transition-colors group">
+<span class="material-symbols-outlined text-[28px] group-hover:-translate-y-0.5 transition-transform" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</button>
+<div class="flex items-center gap-sm bg-surface-container-low/50 px-sm py-xs rounded-full backdrop-blur-sm border border-white/5">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A moody, close-up photograph of a vintage synthesizer keyboard bathed in deep electric violet and neon pink lighting. The scene is dark, atmospheric, and highly textured, fitting a premium, late-night synthwave aesthetic. Focus is sharp on a single glowing key." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3buJr0B64iVmG3KH0etrhHFfApqQk8gTqRUbvXEKmCSD9TleW77P3PvuIbw-PjJDVKA89htr2HQM7aeCyeQNLjHqZkJvndzw-IVEL64v3TVBF6oHf3rL1J8cIPOl7uQVE3qqkRiZx1SiGI90TdCF3MxmXxIMQfwbAvKFzpZrWd-c3F9YRRf9XUMBEh08Hz_BT3DvZRx4d1MsAvpdiawAyhUrTRoAx8MePVeLvqem1shlggc2IYjY"/>
+<div class="flex flex-col pr-sm">
+<span class="font-label-sm text-label-sm text-on-surface">Midnight City</span>
+<span class="font-label-sm text-[10px] text-on-surface-variant opacity-80 uppercase tracking-widest">M83</span>
+</div>
+</div>
+<button class="w-12 h-12 flex items-center justify-center text-on-surface hover:bg-surface-variant rounded-full transition-colors">
+<span class="material-symbols-outlined text-[24px]" data-icon="more_horiz">more_horiz</span>
+</button>
+</header>
+<!-- Lyrics Canvas -->
+<main class="relative z-10 flex-1 w-full px-margin-mobile overflow-y-auto no-scrollbar fade-mask flex flex-col pb-[120px] pt-[10vh]">
+<div class="flex flex-col gap-lg max-w-2xl mx-auto w-full">
+<!-- Past Lyrics -->
+<p class="font-h1 text-h1 text-on-surface-variant opacity-30 transform translate-y-2 transition-all duration-500">Waiting in a car</p>
+<p class="font-h1 text-h1 text-on-surface-variant opacity-40 transform translate-y-1 transition-all duration-500">Waiting for a ride in the dark</p>
+<p class="font-h1 text-h1 text-on-surface-variant opacity-60 transition-all duration-500">The night city grows</p>
+<p class="font-h1 text-h1 text-on-surface-variant opacity-80 transition-all duration-500">Look at the horizon glow</p>
+<!-- Active Lyric -->
+<div class="py-sm my-xs relative">
+<!-- Subtle indicator dot -->
+<div class="absolute left-[-20px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
+<p class="font-display-lg-mobile text-display-lg-mobile text-primary font-bold lyric-glow scale-[1.02] transform origin-left transition-all duration-300">
+                    I'm just a human being
+                </p>
+</div>
+<!-- Future Lyrics -->
+<p class="font-h1 text-h1 text-on-surface-variant opacity-80 transition-all duration-500">Looking for a new start</p>
+<p class="font-h1 text-h1 text-on-surface-variant opacity-60 transition-all duration-500">The city is my church</p>
+<p class="font-h1 text-h1 text-on-surface-variant opacity-40 transform -translate-y-1 transition-all duration-500">It wraps me in its blinding twilight</p>
+<p class="font-h1 text-h1 text-on-surface-variant opacity-30 transform -translate-y-2 transition-all duration-500">Waiting in a car</p>
+</div>
+</main>
+<!-- Mini Playback Footer -->
+<footer class="fixed bottom-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-t border-white/5 pb-safe">
+<!-- Progress Bar -->
+<div class="absolute top-0 left-0 w-full h-[2px] bg-surface-variant">
+<div class="h-full bg-primary w-[45%] rounded-r-full"></div>
+</div>
+<div class="h-[88px] w-full flex items-center justify-between px-margin-mobile">
+<!-- Left Action -->
+<div class="flex-1 flex justify-start">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors rounded-full hover:bg-surface-variant/50">
+<span class="material-symbols-outlined text-[20px]" data-icon="lyrics">lyrics</span>
+</button>
+</div>
+<!-- Primary Controls -->
+<div class="flex items-center gap-md">
+<button class="w-12 h-12 flex items-center justify-center text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[32px]" data-icon="skip_previous">skip_previous</span>
+</button>
+<button class="w-[56px] h-[56px] flex items-center justify-center bg-primary text-on-primary rounded-full hover:scale-105 active:scale-95 transition-transform shadow-[0_4px_24px_rgba(208,188,255,0.25)]">
+<span class="material-symbols-outlined material-symbols-fill text-[32px]" data-icon="pause">pause</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[32px]" data-icon="skip_next">skip_next</span>
+</button>
+</div>
+<!-- Right Action -->
+<div class="flex-1 flex justify-end">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors rounded-full hover:bg-surface-variant/50">
+<span class="material-symbols-outlined text-[20px]" data-icon="share">share</span>
+</button>
+</div>
+</div>
+</footer>
+</body></html>

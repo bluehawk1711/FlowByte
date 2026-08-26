@@ -2,9 +2,10 @@ import { AppColors } from "@/constants/theme";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
 import { Ionicons } from "@expo/vector-icons";
+import { impactAsync, ImpactFeedbackStyle } from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { AudioPro, AudioProState, useAudioPro } from "react-native-audio-pro";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 
@@ -43,6 +44,9 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
   );
 
   const onPlayPause = useCallback(() => {
+    if (Platform.OS === "ios" || Platform.OS === "android") {
+      void impactAsync(ImpactFeedbackStyle.Light);
+    }
     if (isPlaying) {
       AudioPro.pause();
       togglePlayPause(false);
@@ -112,7 +116,12 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
             color={lightTheme ? AppColors.accentCyan : AppColors.textPrimary}
           />
         </Pressable>
-        <Pressable style={styles.controlButton} onPress={() => playNext(true)}>
+        <Pressable style={styles.controlButton} onPress={() => {
+          if (Platform.OS === "ios" || Platform.OS === "android") {
+            void impactAsync(ImpactFeedbackStyle.Medium);
+          }
+          playNext(true);
+        }}>
           <Ionicons
             name="play-skip-forward"
             size={22}

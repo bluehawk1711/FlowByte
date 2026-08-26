@@ -31,6 +31,11 @@ interface PlayerContextValue {
   shuffle: boolean;
   playSong: (song: Song, queue?: Song[]) => void;
   playQueue: (queue: Song[], startIndex?: number) => void;
+  playNext: (song: Song) => void;
+  addToQueue: (song: Song) => void;
+  removeFromQueue: (queueIndex: number) => void;
+  clearQueue: () => void;
+  moveInQueue: (from: number, to: number) => void;
   togglePlay: () => void;
   next: () => void;
   previous: () => void;
@@ -130,6 +135,61 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const playQueue = useCallback((q: Song[], startIndex = 0) => {
     playAtRef.current(startIndex, q);
+  }, []);
+
+  const playNext = useCallback((song: Song) => {
+    const q = queueRef.current;
+    const i = indexRef.current;
+    const nextQ = [...q.slice(0, i + 1), song, ...q.slice(i + 1)];
+    setQueue(nextQ);
+  }, []);
+
+  const addToQueue = useCallback((song: Song) => {
+    setQueue((q) => [...q, song]);
+  }, []);
+
+  const removeFromQueue = useCallback((queueIndex: number) => {
+    setQueue((q) => {
+      const next = q.filter((_, i) => i !== queueIndex);
+      // Adjust current index after removal
+      setIndex((cur) => {
+        if (queueIndex < cur) return cur - 1;
+        if (queueIndex === cur) {
+          if (next.length === 0) {
+            setCurrent(null);
+            setPlaying(false);
+            return 0;
+          }
+          return cur >= next.length ? 0 : cur;
+        }
+        return cur;
+      });
+      return next;
+    });
+  }, []);
+
+  const clearQueue = useCallback(() => {
+    setQueue((q) => {
+      const cur = currentRef.current;
+      if (cur) return [cur];
+      return [];
+    });
+    setIndex(0);
+  }, []);
+
+  const moveInQueue = useCallback((from: number, to: number) => {
+    setQueue((q) => {
+      const next = [...q];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+    setIndex((cur) => {
+      if (from === cur) return to;
+      if (from < cur && to >= cur) return cur - 1;
+      if (from > cur && to <= cur) return cur + 1;
+      return cur;
+    });
   }, []);
 
   const togglePlay = useCallback(() => {
@@ -289,20 +349,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       duration,
       volume,
       repeat,
-      shuffle,
-      playSong,
-      playQueue,
-      togglePlay,
-      next,
-      previous,
-      seek,
-      setVolume,
-      toggleRepeat,
-      toggleShuffle,
+      shuffle,    playSong, playQueue, playNext, addToQueue, removeFromQueue, clearQueue, moveInQueue, togglePlay, next, previous, seek, setVolume, toggleRepeat, toggleShuffle,
     }),
     [
       current, queue, index, playing, position, duration, volume, repeat, shuffle,
-      playSong, playQueue, togglePlay, next, previous, seek, setVolume, toggleRepeat, toggleShuffle,
+      playSong, playQueue, playNext, addToQueue, removeFromQueue, clearQueue, moveInQueue, togglePlay, next, previous, seek, setVolume, toggleRepeat, toggleShuffle,
     ],
   );
 

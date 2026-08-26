@@ -1,28 +1,38 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Loader2, Search } from 'lucide-react';
-import type { Album, Artist, Playlist, Song } from '@flowbyte/types';
+import { useCallback, useEffect, useState } from 'react';
+import { Album, Disc3, Heart, ListMusic, Mic2, Music4, Play, Search, SearchX } from 'lucide-react';
+import type { Album as AlbumT, Artist, Playlist, Song } from '@flowbyte/types';
 import { client } from '../lib/api';
 import { usePlayer } from '../context/PlayerContext';
 import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
-import { Input } from '../components/ui/card';
+import { Input } from '../components/ui/input';
 import { SongRow } from '../components/SongRow';
+import { SongContextMenu, type SongContextMenuState } from '../components/SongContextMenu';
+import { EmptyState } from '../components/ui/feedback';
+import { Skeleton } from '../components/ui/skeleton';
 import { cn } from '../lib/utils';
 
-type Tab = 'songs' | 'artists' | 'albums' | 'playlists' | 'favorites';
+type Tab = 'all' | 'songs' | 'artists' | 'albums' | 'playlists' | 'favorites';
 
-const TABS: Tab[] = ['songs', 'artists', 'albums', 'playlists', 'favorites'];
+const TABS: Array<{ id: Tab; label: string; icon: typeof Music4 }> = [
+  { id: 'all', label: 'All', icon: Music4 },
+  { id: 'songs', label: 'Songs', icon: Music4 },
+  { id: 'artists', label: 'Artists', icon: Mic2 },
+  { id: 'albums', label: 'Albums', icon: Disc3 },
+  { id: 'playlists', label: 'Playlists', icon: ListMusic },
+  { id: 'favorites', label: 'Favorites', icon: Heart },
+];
 
 export function LibraryPage() {
   const { playQueue } = usePlayer();
-  const [tab, setTab] = useState<Tab>('songs');
+  const [tab, setTab] = useState<Tab>('all');
   const [query, setQuery] = useState('');
   const [songs, setSongs] = useState<Song[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [albums, setAlbums] = useState<Album[]>([]);
+  const [albums, setAlbums] = useState<AlbumT[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [favorites, setFavorites] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [ctxMenu, setCtxMenu] = useState<SongContextMenuState | null>(null);
 
   const load = useCallback(async (q: string) => {
     setLoading(true);
@@ -62,139 +72,204 @@ export function LibraryPage() {
     if (songs.length > 0) playQueue(songs, 0);
   }, [songs, playQueue]);
 
-  const visiblePlaylists = tab === 'playlists' ? playlists : [];
+  const playAlbum = (album: AlbumT) => {
+    void client.getAlbum(album.id).then(({ songs: albumSongs }) => {
+      if (albumSongs.length > 0) playQueue(albumSongs, 0);
+    });
+  };
+
+  const songCount = songs.length;
+  const filteredSongs = tab === 'favorites' ? favorites : songs;
+  const showArtists = tab === 'all' || tab === 'artists';
+  const showAlbums = tab === 'all' || tab === 'albums';
+  const showPlaylists = tab === 'playlists';
+  const showSongs = tab === 'all' || tab === 'songs' || tab === 'favorites';
+  const nothing =
+    songCount === 0 && artists.length === 0 && albums.length === 0 && favorites.length === 0;
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold capitalize">{tab}</h1>
+    <div className="mx-auto w-full max-w-6xl px-8 py-8">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink-1">Your Library</h1>
+          <p className="mt-1 text-sm text-ink-2">
+            {songCount} song{songCount === 1 ? '' : 's'} · {albums.length} album
+            {albums.length === 1 ? '' : 's'} · {artists.length} artist{artists.length === 1 ? '' : 's'}
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
             <Input
-              className="w-64 pl-9"
-              placeholder="Search library…"
+              className="w-64 rounded-full bg-card pl-9"
+              placeholder="Filter library…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              aria-label="Filter library"
             />
           </div>
-          <Button variant="secondary" size="sm" onClick={playAll} disabled={songs.length === 0}>
+          <Button variant="secondary" onClick={playAll} disabled={songs.length === 0}>
+            <Play className="h-4 w-4" />
             Play all
           </Button>
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-zinc-800">
-        {TABS.map((t) => (
+      <div className="mt-6 flex gap-1">
+        {TABS.map(({ id, label, icon: Icon }) => (
           <button
-            key={t}
+            key={id}
             className={cn(
-              'px-3 py-2 text-sm capitalize transition-colors',
-              tab === t
-                ? 'border-b-2 border-blue-500 text-zinc-100'
-                : 'text-zinc-400 hover:text-zinc-200',
+              'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-150',
+              tab === id
+                ? 'bg-ink-1 text-app'
+                : 'text-ink-2 hover:bg-white/8 hover:text-ink-1',
             )}
-            onClick={() => setTab(t)}
+            onClick={() => setTab(id)}
+            aria-pressed={tab === id}
           >
-            {t}
+            <Icon className="h-4 w-4" />
+            {label}
           </button>
         ))}
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center py-16 text-zinc-500">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </div>
-      )}
-
-      {!loading && tab === 'songs' && (
-        <div className="space-y-0.5">
-          {songs.map((s, i) => (
-            <SongRow key={s.id} song={s} queue={songs} index={i} />
-          ))}
-          {songs.length === 0 && <EmptyState label="No songs yet — import some from the Home tab" />}
-        </div>
-      )}
-
-      {!loading && tab === 'favorites' && (
-        <div className="space-y-0.5">
-          {favorites.map((s, i) => (
-            <SongRow key={s.id} song={s} queue={favorites} index={i} />
-          ))}
-          {favorites.length === 0 && (
-            <EmptyState label="No favorites yet — click the heart on a song" />
-          )}
-        </div>
-      )}
-
-      {!loading && tab === 'artists' && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {artists.map((a) => (
-            <Card key={a.id} className="flex items-center gap-3 p-3">
-              {a.artworkUrl ? (
-                <img src={a.artworkUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800 text-sm font-medium text-zinc-400">
-                  {a.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{a.name}</p>
-              </div>
-            </Card>
-          ))}
-          {artists.length === 0 && <EmptyState label="No artists yet" />}
-        </div>
-      )}
-
-      {!loading && tab === 'albums' && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {albums.map((al) => (
-            <Card key={al.id} className="flex items-center gap-3 p-3">
-              {al.artworkUrl ? (
-                <img src={al.artworkUrl} alt="" className="h-12 w-12 rounded object-cover" />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded bg-zinc-800">
-                  <span className="text-xs text-zinc-500">No art</span>
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{al.name}</p>
-                <p className="truncate text-xs text-zinc-400">
-                  {al.artistName ?? ''}
-                  {al.releaseYear ? ` · ${al.releaseYear}` : ''}
+      <div className="mt-6">
+        {loading ? (
+          <LibrarySkeleton />
+        ) : nothing ? (
+          <EmptyState
+            icon={Music4}
+            title="Nothing here yet"
+            description="Add a YouTube link with the Add Music button — it lands in your library once downloaded."
+          />
+        ) : query.trim() && songCount === 0 && artists.length === 0 && albums.length === 0 ? (
+          <EmptyState
+            icon={SearchX}
+            title="No results"
+            description={`Nothing matches “${query.trim()}”.`}
+          />
+        ) : (
+          <div className="space-y-8">
+            {showSongs && filteredSongs.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-ink-3">
+                  Songs
                 </p>
+                <div className="space-y-0.5">
+                  {filteredSongs.map((s, i) => (
+                    <SongRow key={s.id} song={s} queue={filteredSongs} index={i} onContextMenu={(song, pos) => setCtxMenu({ song, position: pos })} />
+                  ))}
+                </div>
               </div>
-            </Card>
-          ))}
-          {albums.length === 0 && <EmptyState label="No albums yet" />}
-        </div>
-      )}
+            )}
 
-      {!loading && tab === 'playlists' && visiblePlaylists.length === 0 && (
-        <EmptyState label="No playlists yet — playlist support ships with the mobile sync" />
-      )}
-      {!loading && tab === 'playlists' && visiblePlaylists.length > 0 && (
-        <div className="space-y-0.5">
-          {visiblePlaylists.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center justify-between rounded-md px-3 py-2 hover:bg-zinc-800"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{p.name}</p>
-                <p className="text-xs text-zinc-400">
-                  {p.songCount} songs{p.description ? ` · ${p.description}` : ''}
+            {showArtists && artists.length > 0 && (
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-3">
+                  Artists
                 </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  {artists.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex flex-col items-center rounded-lg p-3 text-center transition-colors duration-150 hover:bg-white/8"
+                    >
+                      {a.artworkUrl ? (
+                        <img
+                          src={a.artworkUrl}
+                          alt=""
+                          className="h-20 w-20 rounded-full object-cover shadow-elev-1"
+                        />
+                      ) : (
+                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-card text-xl font-semibold text-ink-2">
+                          {a.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <p className="mt-2 truncate text-sm font-medium text-ink-1">{a.name}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            )}
+
+            {showAlbums && albums.length > 0 && (
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-3">
+                  Albums
+                </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  {albums.map((al) => (
+                    <button
+                      key={al.id}
+                      onClick={() => playAlbum(al)}
+                      className="group flex flex-col rounded-lg p-3 text-left transition-colors duration-150 hover:bg-white/8"
+                    >
+                      {al.artworkUrl ? (
+                        <img
+                          src={al.artworkUrl}
+                          alt=""
+                          loading="lazy"
+                          className="aspect-square w-full rounded-md object-cover shadow-elev-1"
+                        />
+                      ) : (
+                        <div className="flex aspect-square w-full items-center justify-center rounded-md bg-card">
+                          <Album className="h-8 w-8 text-ink-3" />
+                        </div>
+                      )}
+                      <p className="mt-2 truncate text-sm font-medium text-ink-1">{al.name}</p>
+                      <p className="truncate text-xs text-ink-2">
+                        {al.artistName ?? ''}
+                        {al.releaseYear ? ` · ${al.releaseYear}` : ''}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showPlaylists && playlists.length > 0 && (
+              <div className="space-y-0.5">
+                {playlists.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between rounded-md px-3 py-2 transition-colors duration-150 hover:bg-white/8"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-ink-1">{p.name}</p>
+                      <p className="text-xs text-ink-2">
+                        {p.songCount} songs{p.description ? ` · ${p.description}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <SongContextMenu state={ctxMenu} onClose={() => setCtxMenu(null)} />
     </div>
   );
 }
 
-function EmptyState({ label }: { label: string }) {
-  return <p className="px-3 py-12 text-center text-sm text-zinc-500">{label}</p>;
+function LibrarySkeleton() {
+  return (
+    <div className="space-y-8">
+      <div>
+        <Skeleton className="mb-2 h-4 w-20" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="mb-2 h-14 w-full rounded-md" />
+        ))}
+      </div>
+      <div>
+        <Skeleton className="mb-3 h-4 w-20" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-square w-full rounded-md" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

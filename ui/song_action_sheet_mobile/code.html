@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Song Action Sheet - Aura</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#00311f",
+                        "outline": "#958ea0",
+                        "primary-container": "#a078ff",
+                        "primary-fixed": "#e9ddff",
+                        "secondary": "#4edea3",
+                        "surface-dim": "#0b1326",
+                        "tertiary-container": "#ca801e",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed": "#2c1700",
+                        "surface-bright": "#31394d",
+                        "on-primary-fixed": "#23005c",
+                        "surface-container-highest": "#2d3449",
+                        "error-container": "#93000a",
+                        "background": "#0b1326",
+                        "on-background": "#dae2fd",
+                        "on-secondary-fixed": "#002113",
+                        "primary": "#d0bcff",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-primary": "#3c0091",
+                        "surface-variant": "#2d3449",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-error": "#690005",
+                        "inverse-primary": "#6d3bd7",
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface-container-low": "#131b2e",
+                        "secondary-container": "#00a572",
+                        "on-primary-fixed-variant": "#5516be",
+                        "on-secondary": "#003824",
+                        "on-primary-container": "#340080",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "surface-container-high": "#222a3d",
+                        "tertiary-fixed": "#ffdcbb",
+                        "surface-container": "#171f33",
+                        "inverse-on-surface": "#283044",
+                        "on-tertiary": "#482900",
+                        "surface-tint": "#d0bcff",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "surface-container-lowest": "#060e20",
+                        "tertiary": "#ffb869",
+                        "on-surface-variant": "#cbc3d7",
+                        "outline-variant": "#494454",
+                        "surface": "#0b1326",
+                        "on-surface": "#dae2fd",
+                        "inverse-surface": "#dae2fd",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed-dim": "#d0bcff",
+                        "on-tertiary-container": "#3f2300"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "margin-mobile": "16px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "huge": "64px",
+                        "margin-desktop": "32px",
+                        "xxl": "48px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Hanken Grotesk"],
+                        "h2": ["Hanken Grotesk"],
+                        "h3": ["Hanken Grotesk"],
+                        "display-lg-mobile": ["Hanken Grotesk"],
+                        "body": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "song-title": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "artist-name": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "h1": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "h2": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "h3": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "song-title": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "artist-name": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface min-h-screen text-on-surface font-body overflow-hidden">
+<!-- Background Screen Context (Home Screen Dummy) -->
+<div class="fixed inset-0 z-0 opacity-40 grayscale-[20%] transition-opacity duration-300">
+<img alt="Home Screen Background" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6QBbuR62DJ8BAsP-bsfbcnCG8FKb3IkUYbCzwGPTnYOVLzaKrAuonDEDYB3vo5xWy3DWzsOwu6Zh9mOjYHhrsY2_Dm8iPNf2SwwXddur6KW_NOkATcFBDEIo7cVphF5GnGlvfe4A5Vt-FPiSoqTcCNK-4y2tKyldvnhZs3hw9RWA6b-yNQ6XPyZA6cUpg3WppYYS6a-W9oCtGFZvHvI_58wuMPtuK3ZdGLmODLuOXFLqmDTg4JKw"/>
+</div>
+<!-- Overlay Dimmer -->
+<div class="fixed inset-0 bg-background/60 z-10 backdrop-blur-[2px]"></div>
+<!-- Bottom Sheet Container -->
+<div class="fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ease-out translate-y-0 flex flex-col max-h-[85vh] bg-surface-container-low rounded-t-[24px] shadow-[0_-8px_32px_rgba(0,0,0,0.4)] border-t border-surface-container-high">
+<!-- Drag Handle -->
+<div class="w-full pt-sm pb-md flex justify-center sticky top-0 bg-surface-container-low rounded-t-[24px] z-20">
+<div class="w-12 h-[4px] bg-outline-variant rounded-full"></div>
+</div>
+<!-- Scrollable Content -->
+<div class="overflow-y-auto overscroll-contain px-margin-mobile pb-huge pb-safe">
+<!-- Song Preview Header -->
+<div class="flex items-center gap-md mb-lg pb-md border-b border-surface-container-high">
+<img class="w-[56px] h-[56px] rounded-DEFAULT object-cover flex-shrink-0" data-alt="A moody, abstract album cover art piece featuring deep charcoal and electric violet gradients. The visual style is atmospheric minimalism, perfect for a modern dark-mode music application. The mood is calm, sophisticated, and immersive." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwr0u786yPVZVWRqRnqNT1Ji9V8FNmXE7d8LmEytDlust_8UZTmipLq0JN1Z6G9us-aV8AI45flVL-ecZj0h9YgU5lW-e0TpLZO0RTXoVyEG_GuWsGypumL-fjTQ-Kt1XuDCoegnoxGeaqZ9oIXx7jTWttoiR2D7ehb81yWavgZ9SOZdjzaAf1wG-QpxhWeuBnqTUStcOzaQQY9l5KtXQbT8OxuhzJNSXlzhpd6p3VSBq4HJP65jw"/>
+<div class="flex-1 min-w-0">
+<h2 class="font-song-title text-song-title text-on-surface truncate">Midnight Echoes</h2>
+<p class="font-artist-name text-artist-name text-on-surface-variant truncate">The Night Strangers</p>
+</div>
+</div>
+<!-- Action List -->
+<ul class="flex flex-col">
+<li class="flex items-center gap-md h-[56px] active:bg-surface-variant rounded-DEFAULT transition-colors px-sm cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="skip_next">skip_next</span>
+<span class="font-song-title text-song-title text-on-surface">Play Next</span>
+</li>
+<li class="flex items-center gap-md h-[56px] active:bg-surface-variant rounded-DEFAULT transition-colors px-sm cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="queue_music">queue_music</span>
+<span class="font-song-title text-song-title text-on-surface">Add to Queue</span>
+</li>
+<li class="flex items-center gap-md h-[56px] active:bg-surface-variant rounded-DEFAULT transition-colors px-sm cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="add_box">add_box</span>
+<span class="font-song-title text-song-title text-on-surface">Add to Playlist</span>
+</li>
+<li class="flex items-center gap-md h-[56px] active:bg-surface-variant rounded-DEFAULT transition-colors px-sm cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="favorite_border">favorite_border</span>
+<span class="font-song-title text-song-title text-on-surface">Favorite</span>
+</li>
+<li class="flex items-center gap-md h-[56px] active:bg-surface-variant rounded-DEFAULT transition-colors px-sm cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="download">download</span>
+<span class="font-song-title text-song-title text-on-surface">Download</span>
+</li>
+<li class="flex items-center gap-md h-[56px] active:bg-surface-variant rounded-DEFAULT transition-colors px-sm cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="lyrics">lyrics</span>
+<span class="font-song-title text-song-title text-on-surface">View Lyrics</span>
+</li>
+<li class="flex items-center gap-md h-[56px] active:bg-surface-variant rounded-DEFAULT transition-colors px-sm cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="album">album</span>
+<span class="font-song-title text-song-title text-on-surface">Go to Album</span>
+</li>
+<li class="flex items-center gap-md h-[56px] active:bg-surface-variant rounded-DEFAULT transition-colors px-sm cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="person">person</span>
+<span class="font-song-title text-song-title text-on-surface">Go to Artist</span>
+</li>
+<li class="flex items-center gap-md h-[56px] active:bg-surface-variant rounded-DEFAULT transition-colors px-sm cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="share">share</span>
+<span class="font-song-title text-song-title text-on-surface">Share</span>
+</li>
+</ul>
+</div>
+</div>
+</body></html>

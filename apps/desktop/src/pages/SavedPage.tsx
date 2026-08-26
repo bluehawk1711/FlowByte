@@ -73,7 +73,7 @@ export function SavedPage() {
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold">Saved</h1>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-ink-2">
           YouTube videos and playlists you saved to play later
           {iframePreview ? ' — tap Play for an embedded preview' : ''}.
         </p>
@@ -81,8 +81,8 @@ export function SavedPage() {
 
       {playlists.length === 0 && (
         <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-zinc-400">
-            <ListVideo className="h-8 w-8 text-zinc-600" />
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-ink-2">
+            <ListVideo className="h-8 w-8 text-ink-3" />
             <p>
               Nothing saved yet. Paste a YouTube link on the Home page, analyze it, and use
               “Save to playlist”.
@@ -100,19 +100,19 @@ export function SavedPage() {
                 onClick={() => setExpanded(expanded === p.id ? null : p.id)}
               >
                 {expanded === p.id ? (
-                  <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500" />
+                  <ChevronDown className="h-4 w-4 shrink-0 text-ink-3" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-3" />
                 )}
                 <span className="truncate font-medium">{p.name}</span>
-                <Badge variant="blue" className="shrink-0">
+                <Badge variant="accent" className="shrink-0">
                   {p.items.length} {p.items.length === 1 ? 'item' : 'items'}
                 </Badge>
               </button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-zinc-500 hover:text-red-400"
+                className="h-8 w-8 text-ink-3 hover:text-danger"
                 onClick={() => onDeletePlaylist(p.id)}
                 aria-label="Delete playlist"
               >
@@ -123,12 +123,12 @@ export function SavedPage() {
             {expanded === p.id && (
               <div className="mt-3 space-y-2">
                 {p.items.length === 0 && (
-                  <p className="text-sm text-zinc-500">No items yet.</p>
+                  <p className="text-sm text-ink-3">No items yet.</p>
                 )}
                 {p.items.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-md border border-zinc-800 bg-zinc-900/60 p-3"
+                    className="rounded-md border border-line bg-card/60 p-3"
                   >
                     <div className="flex items-center gap-3">
                       {item.thumbnail && (
@@ -140,7 +140,7 @@ export function SavedPage() {
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{item.title}</p>
-                        <p className="mt-0.5 text-xs text-zinc-500">
+                        <p className="mt-0.5 text-xs text-ink-3">
                           {item.isPlaylist ? 'YouTube playlist' : 'YouTube video'} · saved{' '}
                           {new Date(item.savedAt).toLocaleDateString()}
                         </p>
@@ -179,7 +179,7 @@ export function SavedPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-zinc-500 hover:text-red-400"
+                        className="h-8 w-8 text-ink-3 hover:text-danger"
                         onClick={() => onRemoveItem(p.id, item.id)}
                         aria-label="Remove item"
                       >
@@ -209,10 +209,8 @@ export function SavedPage() {
             )}
           </CardContent>
         </Card>
-      ))}
-
-      {playlists.length > 0 && (
-        <p className="text-xs text-zinc-600">
+      ))}        {playlists.length > 0 && (
+        <p className="text-xs text-ink-3">
           {playlists.length} {playlists.length === 1 ? 'playlist' : 'playlists'} · {total}{' '}
           saved {total === 1 ? 'item' : 'items'} · playlists are stored on this device
         </p>

@@ -5,7 +5,7 @@ import { getSettings, saveSettings } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Input } from '../components/ui/card';
+import { Input } from '../components/ui/input';
 
 export function SettingsPage() {
   const { user, logout } = useAuth();
@@ -30,7 +30,7 @@ export function SettingsPage() {
     <div className="mx-auto max-w-xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-zinc-400">Signed in as {user?.username ?? '…'}</p>
+        <p className="text-sm text-ink-2">Signed in as {user?.username ?? '…'}</p>
       </div>
 
       <Card>
@@ -61,7 +61,7 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm text-zinc-300">Opus bitrate (kbps)</label>
+            <label className="text-sm text-ink-2">Opus bitrate (kbps)</label>
             <Input
               type="number"
               min={64}
@@ -69,26 +69,26 @@ export function SettingsPage() {
               value={bitrate}
               onChange={(e) => setBitrate(e.target.value)}
             />
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-ink-3">
               Used only when transcoding is enabled. Keeps source codec otherwise.
             </p>
           </div>
           <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-            <span className="text-zinc-300">Transcode to Opus on import</span>
+            <span className="text-ink-2">Transcode to Opus on import</span>
             <input
               type="checkbox"
               checked={transcode}
               onChange={(e) => setTranscode(e.target.checked)}
-              className="h-4 w-4 accent-blue-600"
+              className="h-4 w-4 accent-accent"
             />
           </label>
           <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-            <span className="text-zinc-300">Notify when a download finishes</span>
+            <span className="text-ink-2">Notify when a download finishes</span>
             <input
               type="checkbox"
               checked={notify}
               onChange={(e) => setNotify(e.target.checked)}
-              className="h-4 w-4 accent-blue-600"
+              className="h-4 w-4 accent-accent"
             />
           </label>
         </CardContent>
@@ -107,12 +107,12 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent>
           <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-            <span className="text-zinc-300">Show iframe preview (embed player)</span>
+            <span className="text-ink-2">Show iframe preview (embed player)</span>
             <input
               type="checkbox"
               checked={iframePreview}
               onChange={(e) => setIframePreview(e.target.checked)}
-              className="h-4 w-4 accent-blue-600"
+              className="h-4 w-4 accent-accent"
             />
           </label>
         </CardContent>
@@ -120,7 +120,7 @@ export function SettingsPage() {
 
       <div className="flex items-center justify-between">
         <Button onClick={save}>Save settings</Button>
-        <Button variant="ghost" className="gap-2 text-zinc-400" onClick={() => void logout()}>
+        <Button variant="ghost" className="gap-2 text-ink-3" onClick={() => void logout()}>
           <LogOut className="h-4 w-4" />
           Sign out
         </Button>

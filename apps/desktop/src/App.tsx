@@ -8,6 +8,7 @@ import { DownloadsPage } from './pages/DownloadsPage';
 import { HomePage } from './pages/HomePage';
 import { LibraryPage } from './pages/LibraryPage';
 import { SavedPage } from './pages/SavedPage';
+import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
@@ -25,7 +26,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-950 text-zinc-400">
+      <div className="flex h-screen items-center justify-center bg-app text-ink-2">
         Loading…
       </div>
     );
@@ -38,6 +39,7 @@ export default function App() {
   return (
     <AppFrame page={page} onNavigate={setPage}>
       {page === 'home' && <HomePage />}
+      {page === 'search' && <SearchPage />}
       {page === 'library' && <LibraryPage />}
       {page === 'saved' && <SavedPage />}
       {page === 'downloads' && <DownloadsPage />}

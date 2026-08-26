@@ -2,14 +2,16 @@ import { AppColors } from "@/constants/theme";
 import useSaved, {
   isYouTubeUrl,
   parseYouTubeUrl,
+  type SavedYouTubeItem,
 } from "@/lib/saved";
 import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -18,17 +20,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInRight } from "react-native-reanimated";
-
-interface Row {
-  id: string;
-  title: string;
-  sub: string;
-  isPlaylist: boolean;
-  onOpen: () => void;
-  onRemove: () => void;
-}
-
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<Row>);
 
 export const SavedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -40,6 +31,9 @@ export const SavedScreen: React.FC = () => {
 
   const [urlInput, setUrlInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({ videos: true, playlists: true });
 
   const openInBrowser = async (url: string) => {
     await WebBrowser.openBrowserAsync(url, {
@@ -76,31 +70,58 @@ export const SavedScreen: React.FC = () => {
     );
   };
 
-  const rows: Row[] = items.map((item) => ({
-    id: item.id,
-    title: item.title,
-    sub: `${item.isPlaylist ? "Playlist" : "Video"} · saved ${new Date(
-      item.savedAt,
-    ).toLocaleDateString()}`,
-    isPlaylist: item.isPlaylist,
-    onOpen: () => void openInBrowser(item.url),
-    onRemove: () => removeItem(item.id),
-  }));
+  const handleRemoveItem = (item: SavedYouTubeItem) => {
+    Alert.alert("Remove item", `Remove "${item.title}" from saved?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => removeItem(item.id),
+      },
+    ]);
+  };
+
+  const toggleSection = (key: string) => {
+    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Group items
+  const playlists = useMemo(
+    () => items.filter((i) => i.isPlaylist),
+    [items],
+  );
+  const videos = useMemo(
+    () => items.filter((i) => !i.isPlaylist),
+    [items],
+  );
+
+  const hasItems = items.length > 0;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header */}
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={26} color={AppColors.textPrimary} />
+          <Ionicons
+            name="chevron-back"
+            size={26}
+            color={AppColors.textPrimary}
+          />
         </Pressable>
         <Text style={styles.title}>Saved</Text>
-        {items.length > 0 && (
-          <Pressable style={styles.clearButton} onPress={handleClearAll}>
-            <Ionicons name="trash-outline" size={20} color="#EF4444" />
-          </Pressable>
+        {hasItems && (
+          <View style={styles.headerRight}>
+            <Text style={styles.countText}>
+              {items.length} {items.length === 1 ? "item" : "items"}
+            </Text>
+            <Pressable style={styles.clearButton} onPress={handleClearAll}>
+              <Ionicons name="trash-outline" size={18} color="#EF4444" />
+            </Pressable>
+          </View>
         )}
       </View>
 
+      {/* URL Input */}
       <View style={styles.addBox}>
         <Ionicons name="logo-youtube" size={18} color="#FF4E45" />
         <TextInput
@@ -110,7 +131,7 @@ export const SavedScreen: React.FC = () => {
             setUrlInput(t);
             if (error) setError(null);
           }}
-          placeholder="Paste YouTube video or playlist link…"
+          placeholder="Paste YouTube link…"
           placeholderTextColor={AppColors.textSecondary}
           autoCapitalize="none"
           autoCorrect={false}
@@ -118,7 +139,10 @@ export const SavedScreen: React.FC = () => {
           returnKeyType="done"
         />
         <Pressable
-          style={[styles.addButton, !isYouTubeUrl(urlInput) && styles.addButtonDisabled]}
+          style={[
+            styles.addButton,
+            !isYouTubeUrl(urlInput) && styles.addButtonDisabled,
+          ]}
           disabled={!isYouTubeUrl(urlInput)}
           onPress={handleAdd}
         >
@@ -127,49 +151,179 @@ export const SavedScreen: React.FC = () => {
       </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      <AnimatedFlatList
-        data={rows}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="logo-youtube" size={44} color={AppColors.textSecondary} />
-            <Text style={styles.emptyText}>
-              Save YouTube videos and playlists here to play them later — they open
-              in an in-app browser.
-            </Text>
-          </View>
-        }
-        renderItem={({ item, index }) => (
-          <Animated.View entering={FadeInRight.delay(index * 40).duration(250)}>
-            <View style={styles.row}>
-              <Pressable style={styles.rowMain} onPress={item.onOpen}>
-                <View style={styles.art}>
-                  <Ionicons
-                    name={item.isPlaylist ? "list" : "play-circle"}
-                    size={20}
-                    color={AppColors.accentCyan}
-                  />
+      {hasItems ? (
+        <FlatList
+          data={[]}
+          renderItem={null}
+          ListHeaderComponent={
+            <View style={styles.listContent}>
+              {/* Playlists Section */}
+              {playlists.length > 0 && (
+                <View style={styles.section}>
+                  <Pressable
+                    style={styles.sectionHeader}
+                    onPress={() => toggleSection("playlists")}
+                  >
+                    <Ionicons name="list" size={18} color={AppColors.accentCyan} />
+                    <Text style={styles.sectionTitle}>Playlists</Text>
+                    <Text style={styles.sectionCount}>{playlists.length}</Text>
+                    <Ionicons
+                      name={
+                        expandedSections.playlists
+                          ? "chevron-up"
+                          : "chevron-down"
+                      }
+                      size={18}
+                      color={AppColors.textSecondary}
+                    />
+                  </Pressable>
+                  {expandedSections.playlists &&
+                    playlists.map((item, index) => (
+                      <Animated.View
+                        key={item.id}
+                        entering={FadeInRight.delay(index * 40).duration(250)}
+                      >
+                        <SavedItemRow
+                          item={item}
+                          onOpen={() => void openInBrowser(item.url)}
+                          onRemove={() => handleRemoveItem(item)}
+                        />
+                      </Animated.View>
+                    ))}
                 </View>
-                <View style={styles.rowText}>
-                  <Text style={styles.rowTitle} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.rowSub} numberOfLines={1}>
-                    {item.sub}
-                  </Text>
+              )}
+
+              {/* Videos Section */}
+              {videos.length > 0 && (
+                <View style={styles.section}>
+                  <Pressable
+                    style={styles.sectionHeader}
+                    onPress={() => toggleSection("videos")}
+                  >
+                    <Ionicons name="play-circle" size={18} color={AppColors.accentCyan} />
+                    <Text style={styles.sectionTitle}>Videos</Text>
+                    <Text style={styles.sectionCount}>{videos.length}</Text>
+                    <Ionicons
+                      name={
+                        expandedSections.videos
+                          ? "chevron-up"
+                          : "chevron-down"
+                      }
+                      size={18}
+                      color={AppColors.textSecondary}
+                    />
+                  </Pressable>
+                  {expandedSections.videos &&
+                    videos.map((item, index) => (
+                      <Animated.View
+                        key={item.id}
+                        entering={FadeInRight.delay(index * 40).duration(250)}
+                      >
+                        <SavedItemRow
+                          item={item}
+                          onOpen={() => void openInBrowser(item.url)}
+                          onRemove={() => handleRemoveItem(item)}
+                        />
+                      </Animated.View>
+                    ))}
                 </View>
-              </Pressable>
-              <Pressable style={styles.rowAction} onPress={item.onRemove}>
-                <Ionicons name="close" size={20} color={AppColors.textSecondary} />
-              </Pressable>
+              )}
             </View>
-          </Animated.View>
-        )}
-      />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={styles.empty}>
+          <Ionicons
+            name="bookmark-outline"
+            size={48}
+            color={AppColors.textSecondary}
+          />
+          <Text style={styles.emptyTitle}>No saved items</Text>
+          <Text style={styles.emptyText}>
+            Save YouTube videos and playlists above to watch them later.
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Saved Item Row
+// ---------------------------------------------------------------------------
+
+function SavedItemRow({
+  item,
+  onOpen,
+  onRemove,
+}: {
+  item: SavedYouTubeItem;
+  onOpen: () => void;
+  onRemove: () => void;
+}) {
+  const thumbnail = item.thumbnail;
+
+  return (
+    <View style={styles.row}>
+      <Pressable style={styles.rowMain} onPress={onOpen}>
+        {/* Thumbnail */}
+        {thumbnail ? (
+          <Image
+            source={{ uri: thumbnail }}
+            style={styles.thumbnail}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.thumbnail, styles.thumbnailPlaceholder]}>
+            <Ionicons
+              name={item.isPlaylist ? "list" : "play-circle"}
+              size={20}
+              color={AppColors.textSecondary}
+            />
+          </View>
+        )}
+
+        {/* Info */}
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.rowSub} numberOfLines={1}>
+            {item.isPlaylist ? "Playlist" : "Video"} ·{" "}
+            {new Date(item.savedAt).toLocaleDateString()}
+          </Text>
+        </View>
+      </Pressable>
+
+      {/* Actions */}
+      <View style={styles.rowActions}>
+        <Pressable
+          style={styles.actionBtn}
+          onPress={onOpen}
+          hitSlop={8}
+        >
+          <Ionicons
+            name="open-outline"
+            size={18}
+            color={AppColors.textSecondary}
+          />
+        </Pressable>
+        <Pressable
+          style={styles.actionBtn}
+          onPress={onRemove}
+          hitSlop={8}
+        >
+          <Ionicons name="close" size={18} color="#EF4444" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
   container: {
@@ -179,7 +333,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 8,
     gap: 8,
   },
@@ -191,6 +345,15 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: AppColors.textPrimary,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  countText: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
   },
   clearButton: {
     padding: 6,
@@ -231,14 +394,34 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 12,
     paddingTop: 4,
-    paddingBottom: 40,
-    flexGrow: 1,
+    paddingBottom: 120,
+  },
+  section: {
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  sectionTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
+    color: AppColors.textPrimary,
+  },
+  sectionCount: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
+    marginRight: 4,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: 12,
     marginVertical: 2,
     backgroundColor: "#14141E",
@@ -248,10 +431,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  art: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
+  thumbnail: {
+    width: 56,
+    height: 42,
+    borderRadius: 6,
+  },
+  thumbnailPlaceholder: {
     backgroundColor: "#2A2A3A",
     justifyContent: "center",
     alignItems: "center",
@@ -261,7 +446,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   rowTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "500",
     color: AppColors.textPrimary,
   },
@@ -270,7 +455,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
     color: AppColors.textSecondary,
   },
-  rowAction: {
+  rowActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  actionBtn: {
     padding: 8,
   },
   empty: {
@@ -280,9 +470,15 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 40,
   },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: AppColors.textPrimary,
+  },
   emptyText: {
     color: AppColors.textSecondary,
     fontSize: 14,
     textAlign: "center",
+    lineHeight: 20,
   },
 });

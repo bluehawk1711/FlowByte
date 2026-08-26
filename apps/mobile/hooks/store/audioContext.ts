@@ -1,22 +1,44 @@
 import { Song } from "@/constants/types";
 import { getSongCover } from "@/utils/imageUtils";
 import { AudioPro } from "react-native-audio-pro";
+import { Alert } from "react-native";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import history from "./history";
 import { zustandStorage } from "./storageAdapter";
-import { resolvePlaybackUrl } from "@/lib/playback";
+import { OfflineError, resolvePlaybackUrl } from "@/lib/playback";
 
 async function playResolved(song: NonNullable<Song>): Promise<void> {
-  const url = await resolvePlaybackUrl(song);
-  if (!url) return;
-  AudioPro.play({
-    id: song.id,
-    url,
-    title: song.title,
-    artist: song.artist || "unknown",
-    artwork: song.cover || "",
-  });
+  try {
+    const url = await resolvePlaybackUrl(song);
+    if (!url) {
+      Alert.alert(
+        "Not Available",
+        `"${song.title}" has no playable source. It may not be downloaded and no stream URL could be resolved.`,
+        [{ text: "OK" }],
+      );
+      return;
+    }
+    AudioPro.play({
+      id: song.id,
+      url,
+      title: song.title,
+      artist: song.artist || "unknown",
+      artwork: song.cover || "",
+    });
+  } catch (e) {
+    if (e instanceof OfflineError) {
+      Alert.alert("Not Available", e.message, [
+        { text: "OK" },
+      ]);
+    } else {
+      Alert.alert(
+        "Playback Error",
+        `Could not play "${song.title}". ${e instanceof Error ? e.message : "Unknown error"}`,
+        [{ text: "OK" }],
+      );
+    }
+  }
 }
 
 type audioContextState = {
@@ -30,14 +52,25 @@ type audioContextState = {
   setLastPosition: (position: number) => void;
   togglePlayback: () => void;
   setPlaylist: (playlist: Song[]) => void;
-  // loadData: () => void; // Removed, handled by persist
   shuffle: boolean;
   repeat: boolean;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
+  /** Advance to next track (auto-play / manual skip). */
   playNext: (forceSkip?: boolean) => void;
   playPrevious: () => void;
   playList: (playlist: Song[], initialSongIndex?: number) => void;
+  // --- Queue management ---
+  /** Append a song to the end of the queue. */
+  addToQueue: (song: NonNullable<Song>) => void;
+  /** Insert a song right after the currently playing song. */
+  insertNext: (song: NonNullable<Song>) => void;
+  /** Remove a song at a given playlist index. */
+  removeFromQueue: (index: number) => void;
+  /** Remove all songs except the currently playing one. */
+  clearQueue: () => void;
+  /** Move a song from one playlist index to another. */
+  moveInQueue: (from: number, to: number) => void;
 };
 
 const useAudioContext = create<audioContextState>()(
@@ -149,6 +182,54 @@ const useAudioContext = create<audioContextState>()(
         ) {
           get().setSong(playlist[initialSongIndex]);
         }
+      },
+
+      // --- Queue management ---
+
+      addToQueue: (song) => {
+        set((state) => ({ playlist: [...state.playlist, song] }));
+      },
+
+      insertNext: (song) => {
+        const { playlist, song: current } = get();
+        const idx = playlist.findIndex((s) => s?.id === current?.id);
+        const insertAt = idx >= 0 ? idx + 1 : playlist.length;
+        const next = [...playlist];
+        next.splice(insertAt, 0, song);
+        set({ playlist: next });
+      },
+
+      removeFromQueue: (index) => {
+        const { playlist, song: current } = get();
+        if (index < 0 || index >= playlist.length) return;
+        const next = [...playlist];
+        next.splice(index, 1);
+        // If we removed the currently playing song, advance to the next one
+        if (current && playlist[index]?.id === current.id) {
+          set({ playlist: next });
+          if (next.length > 0) {
+            const newIdx = Math.min(index, next.length - 1);
+            get().setSong(next[newIdx]);
+          } else {
+            get().clearSong();
+          }
+        } else {
+          set({ playlist: next });
+        }
+      },
+
+      clearQueue: () => {
+        const { song: current } = get();
+        set({ playlist: current ? [current] : [] });
+      },
+
+      moveInQueue: (from, to) => {
+        const { playlist } = get();
+        if (from === to || from < 0 || to < 0 || from >= playlist.length || to >= playlist.length) return;
+        const next = [...playlist];
+        const [item] = next.splice(from, 1);
+        next.splice(to, 0, item);
+        set({ playlist: next });
       },
     }),
     {

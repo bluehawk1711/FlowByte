@@ -1,11 +1,32 @@
-import { Music2, Pause, Pin, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2 } from 'lucide-react';
+import {
+  ListMusic,
+  Mic2,
+  Music2,
+  Pause,
+  Pin,
+  Play,
+  Repeat,
+  Repeat1,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  Volume2,
+} from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { cn, formatDuration } from '../lib/utils';
 import { showMiniPlayer } from '../lib/tauri';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
 
-export function NowPlayingBar() {
+export function NowPlayingBar({
+  onToggleQueue,
+  onToggleLyrics,
+  onExpand,
+}: {
+  onToggleQueue?: () => void;
+  onToggleLyrics?: () => void;
+  onExpand?: () => void;
+}) {
   const {
     current,
     playing,
@@ -25,85 +46,144 @@ export function NowPlayingBar() {
 
   if (!current) {
     return (
-      <footer className="flex h-20 shrink-0 items-center justify-center border-t border-zinc-800 bg-zinc-900 text-sm text-zinc-500">
-        Nothing playing — pick a song from the library
+      <footer className="flex h-[72px] shrink-0 items-center justify-center border-t border-line bg-player text-sm text-ink-3">
+        Nothing playing — pick a song from your library
       </footer>
     );
   }
 
   return (
-    <footer className="flex h-20 shrink-0 items-center gap-4 border-t border-zinc-800 bg-zinc-900 px-4">
-      {/* Track */}
-      <div className="flex w-64 min-w-0 items-center gap-3">
+    <footer className="flex h-[72px] shrink-0 items-center gap-4 border-t border-line bg-player px-4">
+      {/* Track — clickable to open expanded player */}
+      <button
+        className="flex w-72 min-w-0 items-center gap-3 rounded-md p-1 -m-1 text-left transition-colors duration-150 hover:bg-white/6"
+        onClick={onExpand}
+        aria-label="Expand player"
+      >
         {current.artworkUrl || current.cover ? (
           <img
             src={current.artworkUrl ?? current.cover}
             alt=""
-            className="h-12 w-12 rounded-md object-cover"
+            className="h-14 w-14 shrink-0 rounded-md object-cover shadow-elev-2"
           />
         ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-zinc-800">
-            <Music2 className="h-5 w-5 text-zinc-500" />
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-card shadow-elev-2">
+            <Music2 className="h-5 w-5 text-ink-3" />
           </div>
         )}
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-zinc-100">{current.title}</p>
-          <p className="truncate text-xs text-zinc-400">{current.artistName ?? 'Unknown artist'}</p>
+          <p className="truncate text-sm font-medium text-ink-1">{current.title}</p>
+          <p className="truncate text-xs text-ink-2">
+            {current.artistName ?? 'Unknown artist'}
+          </p>
         </div>
-      </div>
+      </button>
 
       {/* Controls */}
-      <div className="flex flex-1 flex-col items-center gap-1">
-        <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <Button
             variant="ghost"
-            size="icon"
-            className={cn('h-8 w-8', shuffle && 'text-blue-400')}
+            size="icon-sm"
+            className={cn(shuffle && 'text-accent')}
             onClick={toggleShuffle}
             aria-label="Shuffle"
+            aria-pressed={shuffle}
           >
             <Shuffle className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={previous} aria-label="Previous">
-            <SkipBack className="h-4 w-4" />
-          </Button>
-          <Button variant="secondary" size="icon" className="h-10 w-10 rounded-full" onClick={togglePlay} aria-label={playing ? 'Pause' : 'Play'}>
-            {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 translate-x-px" />}
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={next} aria-label="Next">
-            <SkipForward className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-ink-1 hover:scale-105 active:scale-95"
+            onClick={previous}
+            aria-label="Previous"
+          >
+            <SkipBack className="h-5 w-5 fill-current" />
           </Button>
           <Button
             variant="ghost"
-            size="icon"
-            className={cn('h-8 w-8', repeat !== 'off' && 'text-blue-400')}
+            className="mx-1 flex h-10 w-10 items-center justify-center rounded-full bg-ink-1 text-app shadow-elev-1 transition-transform duration-150 hover:scale-105 hover:bg-ink-1 active:scale-95"
+            onClick={togglePlay}
+            aria-label={playing ? 'Pause' : 'Play'}
+          >
+            {playing ? (
+              <Pause className="h-5 w-5" />
+            ) : (
+              <Play className="h-5 w-5 translate-x-px" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-ink-1 hover:scale-105 active:scale-95"
+            onClick={next}
+            aria-label="Next"
+          >
+            <SkipForward className="h-5 w-5 fill-current" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className={cn(repeat !== 'off' && 'text-accent')}
             onClick={toggleRepeat}
             aria-label="Repeat"
+            aria-pressed={repeat !== 'off'}
           >
             {repeat === 'one' ? <Repeat1 className="h-4 w-4" /> : <Repeat className="h-4 w-4" />}
           </Button>
         </div>
-        <div className="flex w-full max-w-xl items-center gap-2 text-[11px] text-zinc-400">
-          <span className="w-10 text-right tabular-nums">{formatDuration(position)}</span>
-          <Slider value={position} max={duration || 1} onChange={seek} />
-          <span className="w-10 tabular-nums">{formatDuration(duration)}</span>
+        <div className="flex w-full max-w-xl items-center gap-2 text-[11px] tabular-nums text-ink-2">
+          <span className="w-10 text-right">{formatDuration(position)}</span>
+          <Slider
+            value={position}
+            max={duration || 1}
+            onChange={seek}
+            ariaLabel="Seek"
+            className="min-w-0"
+          />
+          <span className="w-10">{formatDuration(duration)}</span>
         </div>
       </div>
 
       {/* Volume */}
-      <div className="flex w-40 items-center gap-2">
-        <Volume2 className="h-4 w-4 shrink-0 text-zinc-400" />
-        <Slider value={volume * 100} max={100} onChange={(v) => setVolume(v / 100)} />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => void showMiniPlayer()}
-          aria-label="Open mini player"
-          title="Open mini player (stays on top of other apps)"
-        >
-          <Pin className="h-4 w-4" />
-        </Button>
+      <div className="flex w-44 shrink-0 items-center gap-2">
+        <Volume2 className="h-4 w-4 shrink-0 text-ink-2" />
+        <Slider
+          value={volume * 100}
+          max={100}
+          onChange={(v) => setVolume(v / 100)}
+          ariaLabel="Volume"
+        />          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0 text-ink-2 hover:text-ink-1"
+            onClick={onToggleLyrics}
+            aria-label="Toggle lyrics"
+            title="Lyrics"
+          >
+            <Mic2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0 text-ink-2 hover:text-ink-1"
+            onClick={onToggleQueue}
+            aria-label="Toggle queue"
+            title="Queue"
+          >
+            <ListMusic className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0 text-ink-2 hover:text-ink-1"
+            onClick={() => void showMiniPlayer()}
+            aria-label="Open mini player"
+            title="Open mini player (stays on top of other apps)"
+          >
+            <Pin className="h-4 w-4" />
+          </Button>
       </div>
     </footer>
   );
