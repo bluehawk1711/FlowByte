@@ -6,7 +6,10 @@
   "scripts": {
     "build": "pnpm -r --filter \"@flowbyte/*\" build",
     "typecheck": "pnpm -r --filter \"@flowbyte/*\" typecheck",
-    "lint": "pnpm -r --filter \"@flowbyte/*\" lint"
+    "lint": "pnpm -r --filter \"@flowbyte/*\" lint",
+    "desktop:dev": "pnpm --filter @flowbyte/desktop tauri:dev",
+    "desktop:vite": "pnpm --filter @flowbyte/desktop dev",
+    "api:dev": "pnpm --filter @flowbyte/api dev"
   },
   "engines": {
     "node": ">=20"
