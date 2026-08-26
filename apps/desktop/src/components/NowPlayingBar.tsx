@@ -56,7 +56,7 @@ export function NowPlayingBar({
     <footer className="flex h-[72px] shrink-0 items-center gap-4 border-t border-line bg-player px-4">
       {/* Track — clickable to open expanded player */}
       <button
-        className="flex w-72 min-w-0 items-center gap-3 rounded-md p-1 -m-1 text-left transition-colors duration-150 hover:bg-white/6"
+        className="flex w-48 min-w-0 items-center gap-3 rounded-md p-1 -m-1 text-left transition-colors duration-150 hover:bg-white/6 md:w-60 lg:w-72"
         onClick={onExpand}
         aria-label="Expand player"
       >
@@ -73,7 +73,7 @@ export function NowPlayingBar({
         )}
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-ink-1">{current.title}</p>
-          <p className="truncate text-xs text-ink-2">
+          <p className="hidden truncate text-xs text-ink-2 md:block">
             {current.artistName ?? 'Unknown artist'}
           </p>
         </div>
@@ -146,8 +146,8 @@ export function NowPlayingBar({
         </div>
       </div>
 
-      {/* Volume */}
-      <div className="flex w-44 shrink-0 items-center gap-2">
+      {/* Volume — hidden on narrow screens */}
+      <div className="hidden w-44 shrink-0 items-center gap-2 lg:flex">
         <Volume2 className="h-4 w-4 shrink-0 text-ink-2" />
         <Slider
           value={volume * 100}

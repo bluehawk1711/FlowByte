@@ -141,7 +141,7 @@ export function ExpandedPlayer({ open, onClose }: ExpandedPlayerProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col bg-app/98 backdrop-blur-xl"
+      className="animate-backdrop-in fixed inset-0 z-[60] flex flex-col bg-app/98 backdrop-blur-xl"
       role="dialog"
       aria-modal="true"
       aria-label="Now playing"

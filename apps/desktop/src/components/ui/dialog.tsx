@@ -35,7 +35,7 @@ export function Dialog({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop backdrop-blur-sm"
+      className="animate-backdrop-in fixed inset-0 z-50 flex items-center justify-center bg-backdrop backdrop-blur-sm"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) close();
       }}
@@ -47,7 +47,7 @@ export function Dialog({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'w-full rounded-xl border border-line bg-elevated p-5 shadow-elev-3 outline-none',
+          'animate-dialog-in w-full rounded-xl border border-line bg-elevated p-5 shadow-elev-3 outline-none',
           widthClass,
           className,
         )}

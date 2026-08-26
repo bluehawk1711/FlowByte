@@ -130,7 +130,7 @@ export function ContextMenu({ items, position, onClose }: ContextMenuProps) {
       role="menu"
       aria-label="Actions"
       className={cn(
-        'fixed z-[100] min-w-[200px] rounded-lg border border-line bg-elevated py-1.5 shadow-elev-3',
+        'animate-fade-in-up fixed z-[100] min-w-[200px] rounded-lg border border-line bg-elevated py-1.5 shadow-elev-3',
         'outline-none',
       )}
       style={{ left: position.x, top: position.y }}

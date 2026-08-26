@@ -28,7 +28,7 @@ export function QueuePanel({ open, onClose }: QueuePanelProps) {
       {/* Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-backdrop backdrop-blur-sm lg:hidden"
+          className="animate-backdrop-in fixed inset-0 z-40 bg-backdrop backdrop-blur-sm lg:hidden"
           onClick={onClose}
         />
       )}
