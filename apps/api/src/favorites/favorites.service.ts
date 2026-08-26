@@ -4,6 +4,7 @@ import { DATABASE, type Database } from '../db/db.module';
 import { favorites, songs, artists, albums } from '../db/schema';
 import { SongsService } from '../songs/songs.service';
 import { CacheService } from '../cache/cache.service';
+import { RealtimeService } from '../realtime/realtime.service';
 import type { Song } from '@flowbyte/types';
 
 @Injectable()
@@ -12,6 +13,7 @@ export class FavoritesService {
     @Inject(DATABASE) private readonly db: Database,
     private readonly songsService: SongsService,
     private readonly cache: CacheService,
+    private readonly realtime: RealtimeService,
   ) {}
 
   async list(userId: string): Promise<Song[]> {
@@ -32,6 +34,7 @@ export class FavoritesService {
       .values({ userId, songId })
       .onConflictDoNothing();
     await this.cache.delByPrefix(`songs:list:${userId}`);
+    this.realtime.emitLibraryChanged(userId, { type: 'favorites_changed', songId });
   }
 
   async remove(userId: string, songId: string): Promise<void> {
@@ -39,6 +42,7 @@ export class FavoritesService {
       .delete(favorites)
       .where(and(eq(favorites.userId, userId), eq(favorites.songId, songId)));
     await this.cache.delByPrefix(`songs:list:${userId}`);
+    this.realtime.emitLibraryChanged(userId, { type: 'favorites_changed', songId });
   }
 
   async has(userId: string, songId: string): Promise<void> {

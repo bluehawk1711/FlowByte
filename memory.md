@@ -39,6 +39,7 @@ Persistent project memory. If this file disagrees with code, the code wins and t
 | **Search redesign** | ✅ Mobile: recent searches, browse categories grid per UI spec |
 | **AddMusicModal polish** | ✅ URL input + drag-drop zone + preview area per UI spec |
 | **SongActionsMenu (mobile)** | ✅ Bottom sheet with drag handle + song preview + action list per UI spec |
+| **SSE Realtime** | ✅ Server-Sent Events for live library/playback updates (API + desktop + mobile) |
 
 ## Key Decisions
 
@@ -53,6 +54,7 @@ Persistent project memory. If this file disagrees with code, the code wins and t
 
 - NestJS + Neon PostgreSQL (pooled URL in `apps/api/.env`, gitignored; `.env.example` committed). DTO validation everywhere, structured errors.
 - Cache: `apps/api/src/cache/` — `Redis.fromEnv()` reads canonical **`UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`**; SDK auto-serialization; keys `fb:`; TTLs: lists/search 60s, details 300s, stream = stream TTL−60; invalidation (delByPrefix SCAN) on uploads/lyrics/favorites/playlist mutations; no-op when env unset (boot logs "cache DISABLED"). Cache keys/TTLs in `architecture.md`.
+- SSE Realtime: `apps/api/src/realtime/` — global `RealtimeService` emits `library:changed` and `playback:changed` events to connected clients. Endpoint: `GET /api/realtime/events?token=<jwt>` (EventSource). Desktop uses browser EventSource; mobile uses fetch streaming. Auto-reconnect with exponential backoff. Events emitted from `UploadsService.complete()`, `FavoritesService.add/remove()`, `PlaybackService.sync()`.
 - Env files: `apps/{api,desktop,mobile}/.env*` — `.env` gitignored, `.env.example` committed, real secrets never committed (rule #5). Desktop `VITE_API_URL`, mobile `EXPO_PUBLIC_API_URL` = `http://localhost:3001`.
 
 ## Desktop Notes

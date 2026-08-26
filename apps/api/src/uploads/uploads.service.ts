@@ -5,6 +5,7 @@ import { albums, artists, songs } from '../db/schema';
 import { STORAGE_PROVIDER, type StorageProvider } from '../storage/storage-provider.interface';
 import { SongsService } from '../songs/songs.service';
 import { CacheService } from '../cache/cache.service';
+import { RealtimeService } from '../realtime/realtime.service';
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import type { CompleteUploadDto } from './dto/complete-upload.dto';
@@ -19,6 +20,7 @@ export class UploadsService {
     @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
     private readonly songsService: SongsService,
     private readonly cache: CacheService,
+    private readonly realtime: RealtimeService,
   ) {}
 
   /** Raw audio bytes → storage. Key: audio/{uuid}.{ext} */
@@ -53,7 +55,7 @@ export class UploadsService {
    * sourceId (YouTube video ID) / sourceUrl — duplicates return the existing
    * song and any newly staged files are cleaned up (no orphans).
    */
-  async complete(dto: CompleteUploadDto): Promise<{ song: Song; duplicate: boolean }> {
+  async complete(userId: string, dto: CompleteUploadDto): Promise<{ song: Song; duplicate: boolean }> {
     const duplicate = await this.findDuplicate(dto);
     if (duplicate) {
       await this.cleanupStaged(dto, duplicate);
@@ -138,6 +140,10 @@ export class UploadsService {
     await this.cache.delByPrefix('search:');
     await this.cache.del('artists:list');
     await this.cache.del('albums:list');
+
+    // Notify connected clients that the library changed
+    this.realtime.emitLibraryChanged(userId, { type: 'song_added', songId: result.id });
+
     return { song: await this.songsService.findById(result.id), duplicate: false };
   }
 

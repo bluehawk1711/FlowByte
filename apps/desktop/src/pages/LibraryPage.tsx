@@ -3,6 +3,7 @@ import { Album, Disc3, Heart, ListMusic, Mic2, Music4, Play, Search, SearchX } f
 import type { Album as AlbumT, Artist, Playlist, Song } from '@flowbyte/types';
 import { client } from '../lib/api';
 import { usePlayer } from '../context/PlayerContext';
+import { useRealtime } from '../hooks/useRealtime';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { SongRow } from '../components/SongRow';
@@ -67,6 +68,13 @@ export function LibraryPage() {
     const t = setTimeout(() => void load(query), query ? 250 : 0);
     return () => clearTimeout(t);
   }, [query, load]);
+
+  // Auto-refresh when library changes via SSE
+  useRealtime({
+    onLibraryChanged: () => {
+      void load(query);
+    },
+  });
 
   const playAll = useCallback(() => {
     if (songs.length > 0) playQueue(songs, 0);

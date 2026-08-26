@@ -227,3 +227,24 @@ export interface RecentlyPlayedEntry {
   lastPlayedAt: string;
   playCount: number;
 }
+
+// ---------------------------------------------------------------------------
+// Realtime (SSE)
+// ---------------------------------------------------------------------------
+
+export interface LibraryChangedEvent {
+  type: 'song_added' | 'song_deleted' | 'favorites_changed' | 'playlist_changed';
+  songId?: string;
+  playlistId?: string;
+}
+
+export interface PlaybackChangedEvent {
+  songId: string | null;
+  position: number;
+  isPlaying: boolean;
+  deviceId: string | null;
+}
+
+export type RealtimeEvent =
+  | { event: 'library:changed'; data: LibraryChangedEvent }
+  | { event: 'playback:changed'; data: PlaybackChangedEvent };

@@ -3,6 +3,7 @@ import { Clock, Heart, Sparkles } from 'lucide-react';
 import type { RecentlyPlayedEntry, Song } from '@flowbyte/types';
 import { client } from '../lib/api';
 import { usePlayer } from '../context/PlayerContext';
+import { useRealtime } from '../hooks/useRealtime';
 import { SongRow } from '../components/SongRow';
 import { SongContextMenu, type SongContextMenuState } from '../components/SongContextMenu';
 import { Button } from '../components/ui/button';
@@ -24,27 +25,37 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [ctxMenu, setCtxMenu] = useState<SongContextMenuState | null>(null);
 
+  const fetchData = useCallback(async () => {
+    try {
+      const [r, s, f] = await Promise.all([
+        client.recentlyPlayed(12).catch(() => []),
+        client.getSongs({ pageSize: 10 }).catch(() => ({ items: [] as Song[] })),
+        client.getFavorites().catch(() => []),
+      ]);
+      setRecent(r);
+      setAdded(s.items);
+      setFavorites(f);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const [r, s, f] = await Promise.all([
-          client.recentlyPlayed(12).catch(() => []),
-          client.getSongs({ pageSize: 10 }).catch(() => ({ items: [] as Song[] })),
-          client.getFavorites().catch(() => []),
-        ]);
-        if (cancelled) return;
-        setRecent(r);
-        setAdded(s.items);
-        setFavorites(f);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
+    void fetchData().then(() => {
+      if (cancelled) return;
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [fetchData]);
+
+  // Auto-refresh when library changes via SSE
+  useRealtime({
+    onLibraryChanged: () => {
+      void fetchData();
+    },
+  });
 
   const playRecent = useCallback(() => {
     const songs = recent.map((r) => r.song);

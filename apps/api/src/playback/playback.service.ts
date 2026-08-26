@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { DATABASE, type Database } from '../db/db.module';
 import { playbackState, songs, artists, albums, devices } from '../db/schema';
 import { SongsService } from '../songs/songs.service';
+import { RealtimeService } from '../realtime/realtime.service';
 import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import type { PlaybackState } from '@flowbyte/types';
 
@@ -28,6 +29,7 @@ export class PlaybackService {
   constructor(
     @Inject(DATABASE) private readonly db: Database,
     private readonly songsService: SongsService,
+    private readonly realtime: RealtimeService,
   ) {}
 
   async get(userId: string): Promise<PlaybackState> {
@@ -102,6 +104,15 @@ export class PlaybackService {
           updatedAt: new Date(),
         },
       });
+
+    // Broadcast to other devices of the same user
+    this.realtime.emitPlaybackChanged(userId, {
+      songId: dto.songId ?? null,
+      position: dto.position,
+      isPlaying: dto.isPlaying,
+      deviceId,
+    });
+
     return this.get(userId);
   }
 }

@@ -21,6 +21,7 @@ import type {
   Song,
   SongWithLyrics,
   User,
+  RealtimeEvent,
 } from '@flowbyte/types';
 
 /** Pluggable token persistence (AsyncStorage on mobile, localStorage on desktop). */
@@ -459,5 +460,52 @@ export class FlowbyteClient {
 
   async getLyrics(songId: string): Promise<NormalizedLyrics | null> {
     return this.request<NormalizedLyrics | null>('GET', `/lyrics/${songId}`);
+  }
+
+  // -------------------------------------------------------------------------
+  // Realtime (SSE)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Subscribe to server-sent events (library changes, playback changes).
+   * Returns a cleanup function to close the EventSource.
+   *
+   * Usage:
+   *   const unsub = client.subscribeToEvents((event) => {
+   *     if (event.event === 'library:changed') { ... }
+   *     if (event.event === 'playback:changed') { ... }
+   *   });
+   *   // later: unsub();
+   */
+  subscribeToEvents(
+    onEvent: (event: RealtimeEvent) => void,
+    onError?: (error: Event) => void,
+  ): () => void {
+    const tokens = this.tokenStorage.getTokens();
+    // tokens is a Promise, but EventSource needs the URL immediately
+    // We'll use a thenable approach
+    let eventSource: EventSource | null = null;
+
+    void tokens.then((t) => {
+      if (!t) return;
+      const url = `${this.baseUrl}/api/realtime/events?token=${encodeURIComponent(t.accessToken)}`;
+      eventSource = new EventSource(url);
+
+      eventSource.addEventListener('library:changed', ((e: MessageEvent) => {
+        onEvent({ event: 'library:changed', data: JSON.parse(e.data) });
+      }) as EventListener);
+
+      eventSource.addEventListener('playback:changed', ((e: MessageEvent) => {
+        onEvent({ event: 'playback:changed', data: JSON.parse(e.data) });
+      }) as EventListener);
+
+      eventSource.onerror = (e) => {
+        onError?.(e);
+      };
+    });
+
+    return () => {
+      eventSource?.close();
+    };
   }
 }

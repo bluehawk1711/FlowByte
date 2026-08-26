@@ -15,6 +15,7 @@ import { HistoryModule } from './history/history.module';
 import { LyricsModule } from './lyrics/lyrics.module';
 import { PlaybackModule } from './playback/playback.module';
 import { PlaylistsModule } from './playlists/playlists.module';
+import { RealtimeModule } from './realtime/realtime.module';
 import { SearchModule } from './search/search.module';
 import { SongsModule } from './songs/songs.module';
 import { StorageModule } from './storage/storage.module';
@@ -43,6 +44,7 @@ import { UploadsModule } from './uploads/uploads.module';
     LyricsModule,
     UploadsModule,
     SearchModule,
+    RealtimeModule,
   ],
   controllers: [StorageController],
   providers: [

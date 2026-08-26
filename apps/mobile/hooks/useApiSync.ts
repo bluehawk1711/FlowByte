@@ -3,6 +3,7 @@ import { AppState, type AppStateStatus } from "react-native";
 import { initApiClient, isSignedIn, signOut, client } from "@/lib/api";
 import { recordApiPlay, syncLibrary, syncPlayback } from "@/lib/sync";
 import useAudioContext from "./store/audioContext";
+import { useRealtime } from "./useRealtime";
 
 const SYNC_INTERVAL_MS = 12_000;
 
@@ -30,6 +31,15 @@ export const useApiSync = () => {
       setSyncing(false);
     }
   };
+
+  // Real-time library updates via SSE
+  useRealtime({
+    enabled: signedIn,
+    onLibraryChanged: () => {
+      // Re-sync library when changes are detected
+      void doSync({ silent: true });
+    },
+  });
 
   useEffect(() => {
     let mounted = true;

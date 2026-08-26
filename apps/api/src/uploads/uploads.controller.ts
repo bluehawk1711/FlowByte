@@ -12,6 +12,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { UploadsService } from './uploads.service';
 import { CompleteUploadDto } from './dto/complete-upload.dto';
+import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator';
 import type { Song } from '@flowbyte/types';
 
 async function readBody(req: Request): Promise<Buffer> {
@@ -63,7 +64,10 @@ export class UploadsController {
   @ApiOperation({
     summary: 'Register metadata for uploaded files (creates song, dedupes by source)',
   })
-  complete(@Body() dto: CompleteUploadDto): Promise<{ song: Song; duplicate: boolean }> {
-    return this.uploadsService.complete(dto);
+  complete(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CompleteUploadDto,
+  ): Promise<{ song: Song; duplicate: boolean }> {
+    return this.uploadsService.complete(user.id, dto);
   }
 }
