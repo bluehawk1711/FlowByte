@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       build_type:
-        description: 'Build type'
+        description: "Build type"
         required: true
-        default: 'release'
+        default: "release"
         type: choice
         options:
           - dev
@@ -18,14 +18,12 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      EXPO_NO_TELEMETRY: '1'
+      EXPO_NO_TELEMETRY: "1"
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11
 
       - uses: actions/setup-node@v4
         with:
@@ -36,7 +34,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
