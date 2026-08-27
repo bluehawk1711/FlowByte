@@ -11,7 +11,7 @@ use crate::downloader::{broadcast_progress, ActiveChild};
 static ACTIVE: Lazy<Mutex<std::collections::HashMap<String, ActiveChild>>> =
     Lazy::new(|| Mutex::new(std::collections::HashMap::new()));
 
-#[derive(Serialize, Clone)]
+#[derive(serde::Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MusicImportOptions {
     pub bitrate: Option<u32>,
@@ -39,11 +39,11 @@ pub struct MusicImportResult {
 
 fn codec_from_ext(ext: &str) -> String {
     match ext.to_ascii_lowercase().as_str() {
-        "opus" | "ogg" => "opus",
-        "m4a" | "mp4" => "aac",
-        "webm" => "opus",
-        "mp3" => "mp3",
-        "wav" => "pcm",
+        "opus" | "ogg" => "opus".to_string(),
+        "m4a" | "mp4" => "aac".to_string(),
+        "webm" => "opus".to_string(),
+        "mp3" => "mp3".to_string(),
+        "wav" => "pcm".to_string(),
         other => other.to_string(),
     }
 }

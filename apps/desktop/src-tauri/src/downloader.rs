@@ -33,7 +33,7 @@ pub struct DownloadProgress {
 }
 
 impl DownloadProgress {
-    fn new(status: &str) -> Self {
+    pub fn new(status: &str) -> Self {
         DownloadProgress {
             percent: 0.0,
             speed: "0KiB/s".into(),
@@ -62,7 +62,7 @@ static RE: Lazy<ProgressRegex> = Lazy::new(|| ProgressRegex {
     playlist: regex::Regex::new(r"Downloading (?:video|item) (\d+) of (\d+)").unwrap(),
 });
 
-fn parse_progress(line: &str, current: &mut DownloadProgress) {
+pub fn parse_progress(line: &str, current: &mut DownloadProgress) {
     if let Some(c) = RE.percent.captures(line) {
         if let Some(m) = c.get(1) {
             if let Ok(p) = m.as_str().parse::<f64>() {
@@ -315,14 +315,14 @@ pub async fn start_download(
             let removed = {
                 let mut guard = ACTIVE.lock().unwrap();
                 let gone = !guard.contains_key(&id3);
-                let s = guard.get_mut(&id3).and_then(|c| c.child.try_wait());
+                let s = guard.get_mut(&id3).map(|c| c.child.try_wait());
                 if gone {
                     Some(None)
                 } else {
                     match s {
-                        Ok(Some(st)) => Some(Some(st)),
-                        Ok(None) => None,
-                        Err(_) => Some(None),
+                        Some(Ok(Some(st))) => Some(Some(st)),
+                        Some(Ok(None)) => None,
+                        Some(Err(_)) | None => Some(None),
                     }
                 }
             };

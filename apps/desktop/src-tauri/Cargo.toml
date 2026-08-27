@@ -16,7 +16,7 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["process", "sync", "macros", "io-util"] }
+tokio = { version = "1", features = ["process", "sync", "macros", "io-util", "time"] }
 once_cell = "1"
 dirs = "6"
 regex = "1"
