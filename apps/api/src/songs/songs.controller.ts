@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SongsService } from './songs.service';
 import { ListSongsQuery } from './dto/list-songs.dto';
@@ -19,19 +19,19 @@ export class SongsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a single song' })
-  findOne(@Param('id') id: string): Promise<Song> {
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Song> {
     return this.songsService.findById(id);
   }
 
   @Get(':id/lyrics')
   @ApiOperation({ summary: 'Get a song with normalized lyrics (if any)' })
-  findOneWithLyrics(@Param('id') id: string): Promise<SongWithLyrics> {
+  findOneWithLyrics(@Param('id', ParseUUIDPipe) id: string): Promise<SongWithLyrics> {
     return this.songsService.getWithLyrics(id);
   }
 
   @Get(':id/stream')
   @ApiOperation({ summary: 'Get a signed streaming URL (authorized before issuing)' })
-  stream(@Param('id') id: string): Promise<{ url: string; expiresIn: number }> {
+  stream(@Param('id', ParseUUIDPipe) id: string): Promise<{ url: string; expiresIn: number }> {
     return this.songsService.getStreamInfo(id);
   }
 }

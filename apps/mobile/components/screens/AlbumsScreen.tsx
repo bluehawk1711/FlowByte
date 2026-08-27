@@ -26,7 +26,7 @@ interface Album {
   name: string;
   artistName?: string;
   artworkUrl?: string;
-  songCount?: number;
+  // songCount?: number;
   releaseYear?: number;
 }
 
@@ -34,7 +34,6 @@ export const AlbumsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { playList } = useAudioContext();
-  const currentSong = useAudioContext((s) => s.song);
 
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +45,7 @@ export const AlbumsScreen: React.FC = () => {
       try {
         if (!client) return;
         const data = await client.getAlbums();
-        if (!cancelled) setAlbums(data.map((a) => ({
+        if (!cancelled) setAlbums(data.map((a: { id: string; name: string; artistName?: string | null; artworkUrl?: string | null; releaseYear?: number | null }) => ({
           id: a.id,
           name: a.name,
           artistName: a.artistName ?? undefined,

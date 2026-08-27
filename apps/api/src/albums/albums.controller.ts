@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AlbumsService } from './albums.service';
 import type { Album, Song } from '@flowbyte/types';
@@ -17,7 +17,7 @@ export class AlbumsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Album detail with its songs' })
-  detail(@Param('id') id: string): Promise<{ album: Album; songs: Song[] }> {
+  detail(@Param('id', ParseUUIDPipe) id: string): Promise<{ album: Album; songs: Song[] }> {
     return this.albumsService.getDetail(id);
   }
 }

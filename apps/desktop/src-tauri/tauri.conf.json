@@ -37,7 +37,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:* https://*; img-src 'self' https://* data:; media-src 'self' http://localhost:* https://*; style-src 'self' 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com"
     }
   },
   "bundle": {

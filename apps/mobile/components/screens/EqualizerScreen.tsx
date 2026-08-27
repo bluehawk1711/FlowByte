@@ -48,10 +48,11 @@ export const EqualizerScreen: React.FC<EqualizerScreenProps> = ({
   ).current;
 
   useEffect(() => {
+    const animations: Animated.CompositeAnimation[] = [];
     if (isEnabled) {
       barAnims.forEach((anim, index) => {
         const animate = () => {
-          Animated.sequence([
+          const seq = Animated.sequence([
             Animated.timing(anim, {
               toValue: Math.random() * 0.8 + 0.2,
               duration: 200 + Math.random() * 300,
@@ -64,12 +65,19 @@ export const EqualizerScreen: React.FC<EqualizerScreenProps> = ({
               easing: Easing.inOut(Easing.ease),
               useNativeDriver: true,
             }),
-          ]).start(() => animate());
+          ]);
+          animations.push(seq);
+          seq.start(() => animate());
         };
-        setTimeout(() => animate(), index * 50);
+        const timer = setTimeout(() => animate(), index * 50);
+        animations.push({ stop: () => clearTimeout(timer) } as unknown as Animated.CompositeAnimation);
       });
     }
-  }, [isEnabled]);
+    return () => {
+      animations.forEach((a) => a.stop());
+      barAnims.forEach((anim) => anim.stopAnimation());
+    };
+  }, [isEnabled, barAnims]);
 
   const handleEqChange = (index: number, value: number) => {
     const newValues = [...eqValues];

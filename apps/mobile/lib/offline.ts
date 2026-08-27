@@ -60,11 +60,11 @@ export function getOfflineRecords(): Record<string, DownloadRecord> {
   return store.records;
 }
 
-function persist(): void {
+async function persist(): Promise<void> {
   try {
     LIBRARY_DIR.create({ intermediates: true, idempotent: true });
     INDEX_FILE.create({ overwrite: true, intermediates: true });
-    INDEX_FILE.write(JSON.stringify(store.records));
+    await INDEX_FILE.write(JSON.stringify(store.records));
   } catch {
     // best-effort persistence; index can be rebuilt by re-downloading
   }
@@ -117,7 +117,7 @@ export async function downloadSong(
       downloadedAt: new Date().toISOString(),
       fileSize: downloaded.size ?? 0,
     };
-    persist();
+    await persist();
   } finally {
     delete store.loading[songId];
     notify();
@@ -134,7 +134,7 @@ export async function removeOfflineSong(songId: string): Promise<void> {
       // file already gone
     }
     delete store.records[songId];
-    persist();
+    await persist();
     notify();
   }
 }

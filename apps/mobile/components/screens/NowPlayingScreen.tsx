@@ -63,7 +63,10 @@ export const NowPlayingScreen = () => {
 
   const apiSongId =
     song?.source === "api"
-      ? (song.apiSongId ?? (song.id.startsWith(API_PREFIX) ? song.id.slice(API_PREFIX.length) : null))
+      ? (song.apiSongId ??
+        (song.id.startsWith(API_PREFIX)
+          ? song.id.slice(API_PREFIX.length)
+          : null))
       : null;
 
   const [offline, setOffline] = useState(false);
@@ -118,14 +121,16 @@ export const NowPlayingScreen = () => {
     setLyrics(null);
     void client
       .getLyrics(apiSongId)
-      .then((res) => {
+      .then((res: NormalizedLyrics | null) => {
         if (!cancelled) setLyrics(res);
       })
       .catch(() => {})
       .finally(() => {
         if (!cancelled) setLyricsLoading(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [apiSongId]);
 
   // Find active lyrics line based on current position
@@ -144,7 +149,11 @@ export const NowPlayingScreen = () => {
 
   // Auto-scroll to active line
   useEffect(() => {
-    if (activeLyricsIndex < 0 || activeLyricsIndex === prevActiveLyricsRef.current) return;
+    if (
+      activeLyricsIndex < 0 ||
+      activeLyricsIndex === prevActiveLyricsRef.current
+    )
+      return;
     prevActiveLyricsRef.current = activeLyricsIndex;
     lyricsFlatListRef.current?.scrollToIndex({
       index: activeLyricsIndex,
@@ -268,7 +277,9 @@ export const NowPlayingScreen = () => {
                 <Ionicons
                   name={offline ? "checkmark-circle" : "download-outline"}
                   size={16}
-                  color={offline ? AppColors.accentCyan : AppColors.textSecondary}
+                  color={
+                    offline ? AppColors.accentCyan : AppColors.textSecondary
+                  }
                 />
               )}
               <Text style={styles.offlineText}>
@@ -385,10 +396,7 @@ export const NowPlayingScreen = () => {
             </Text>
           </Pressable>
         )}
-        <Pressable
-          style={styles.bottomTab}
-          onPress={() => setShowQueue(true)}
-        >
+        <Pressable style={styles.bottomTab} onPress={() => setShowQueue(true)}>
           <Ionicons name="list" size={20} color={AppColors.textSecondary} />
           <Text style={styles.bottomTabText}>Queue</Text>
         </Pressable>
@@ -442,7 +450,11 @@ export const NowPlayingScreen = () => {
             />
           ) : (
             <View style={styles.lyricsEmpty}>
-              <Ionicons name="mic-outline" size={28} color={AppColors.textSecondary} />
+              <Ionicons
+                name="mic-outline"
+                size={28}
+                color={AppColors.textSecondary}
+              />
               <Text style={styles.lyricsEmptyText}>No lyrics available</Text>
             </View>
           )}

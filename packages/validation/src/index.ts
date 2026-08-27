@@ -17,6 +17,32 @@ export function isYouTubeUrl(value: string): boolean {
   return YOUTUBE_URL_PATTERN.test(value.trim());
 }
 
+export interface ParsedYouTubeUrl {
+  videoId: string | null;
+  playlistId: string | null;
+  isPlaylist: boolean;
+}
+
+/** Extract video/playlist ids from a YouTube URL (watch/youtu.be/embed/shorts/playlist). */
+export function parseYouTubeUrl(url: string): ParsedYouTubeUrl | null {
+  const trimmed = url.trim();
+  if (!YOUTUBE_URL_PATTERN.test(trimmed)) return null;
+  try {
+    const parsed = new URL(trimmed.includes('://') ? trimmed : `https://${trimmed}`);
+    const playlistId = parsed.searchParams.get('list');
+    const videoId =
+      parsed.searchParams.get('v') ??
+      (parsed.hostname.endsWith('youtu.be') ? parsed.pathname.split('/')[1] : undefined) ??
+      (parsed.pathname.startsWith('/embed/') || parsed.pathname.startsWith('/shorts/')
+        ? parsed.pathname.split('/')[2]
+        : undefined) ??
+      null;
+    return { videoId, playlistId, isPlaylist: videoId === null && playlistId !== null };
+  } catch {
+    return null;
+  }
+}
+
 export function isUrl(value: string): boolean {
   try {
     new URL(value);
@@ -65,6 +91,9 @@ export function extractYouTubeVideoId(url: string): string | null {
     if (v) return v;
     const live = parsed.searchParams.get('live');
     if (live) return live;
+    // Handle /embed/<id> and /shorts/<id>
+    const pathMatch = parsed.pathname.match(/^\/(embed|shorts)\/([^/?]+)/);
+    if (pathMatch?.[2]) return pathMatch[2];
   }
   return null;
 }

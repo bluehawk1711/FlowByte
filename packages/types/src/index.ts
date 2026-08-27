@@ -81,15 +81,28 @@ export interface Song {
   sourceId: string | null;
   createdAt: string;
   updatedAt: string;
-  // --- playback/mobile additions (optional, client-side) ---
+  /** @deprecated Client-side only — playback URL resolved at runtime */
   url?: string;
+  /** @deprecated Client-side only — derived cover artwork URL */
   cover?: string;
+  /** @deprecated Client-side only — streaming URL for the song */
   streamUrl?: string;
+  /** @deprecated Client-side only — song source type */
   source?: SongSource;
+  /** @deprecated Client-side only — offline download state */
   isDownloaded?: boolean;
+  /** @deprecated Client-side only — local file path for offline playback */
   localUri?: string;
+  /** @deprecated Client-side only — download progress */
   downloadStatus?: 'none' | 'downloading' | 'downloaded' | 'error';
+  /** @deprecated Client-side only — favorite status */
   isFavorite?: boolean;
+  /** @deprecated Client-side only */
+  apiSongId?: string;
+  /** @deprecated Client-side only — artist name shorthand */
+  artist?: string;
+  /** @deprecated Client-side only — album name shorthand */
+  album?: string;
 }
 
 export interface Playlist {

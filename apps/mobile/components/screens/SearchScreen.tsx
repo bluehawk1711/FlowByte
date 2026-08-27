@@ -7,21 +7,26 @@ import { client } from "@/lib/api";
 import { toMobileSong } from "@/lib/sync";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
   Image,
+  Linking,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SongRowSkeleton, ArtistCardSkeleton, AlbumCardSkeleton } from "@/components/ui/Skeleton";
+import {
+  SongRowSkeleton,
+  ArtistCardSkeleton,
+  AlbumCardSkeleton,
+} from "@/components/ui/Skeleton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { isYouTubeUrl } from "@flowbyte/validation";
 
 const DEBOUNCE_MS = 300;
 const RECENT_SEARCHES_KEY = "flowbyte.recentSearches";
@@ -29,13 +34,19 @@ const MAX_RECENT = 10;
 
 interface SearchResult {
   songs: Song[];
-  artists: { id: string; name: string; artworkUrl?: string; songCount?: number }[];
-  albums: { id: string; name: string; artistName?: string; artworkUrl?: string; songCount?: number }[];
-}
-
-// YouTube URL detection
-function isYouTubeUrl(url: string): boolean {
-  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/.test(url.trim());
+  artists: {
+    id: string;
+    name: string;
+    artworkUrl?: string;
+    songCount?: number;
+  }[];
+  albums: {
+    id: string;
+    name: string;
+    artistName?: string;
+    artworkUrl?: string;
+    songCount?: number;
+  }[];
 }
 
 // Browse categories with colors
@@ -56,7 +67,7 @@ export const SearchScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const inputRef = useRef<TextInput>(null);
-  const { playList, addToQueue } = useAudioContext();
+  const { playList } = useAudioContext();
   const currentSong = useAudioContext((s) => s.song);
   const isPlaying = useAudioContext((s) => s.isPlaying);
 
@@ -75,7 +86,9 @@ export const SearchScreen: React.FC = () => {
       try {
         const raw = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
         if (raw) setRecentSearches(JSON.parse(raw));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     })();
   }, []);
 
@@ -83,8 +96,13 @@ export const SearchScreen: React.FC = () => {
     const trimmed = term.trim();
     if (!trimmed || isYouTubeUrl(trimmed)) return;
     setRecentSearches((prev) => {
-      const next = [trimmed, ...prev.filter((s) => s !== trimmed)].slice(0, MAX_RECENT);
-      AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next)).catch(() => {});
+      const next = [trimmed, ...prev.filter((s) => s !== trimmed)].slice(
+        0,
+        MAX_RECENT,
+      );
+      AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next)).catch(
+        () => {},
+      );
       return next;
     });
   }, []);
@@ -92,7 +110,9 @@ export const SearchScreen: React.FC = () => {
   const removeRecentSearch = useCallback(async (term: string) => {
     setRecentSearches((prev) => {
       const next = prev.filter((s) => s !== term);
-      AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next)).catch(() => {});
+      AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next)).catch(
+        () => {},
+      );
       return next;
     });
   }, []);
@@ -119,8 +139,15 @@ export const SearchScreen: React.FC = () => {
         const res = await client.search({ query: query.trim() });
         setResults({
           songs: res.songs.map(toMobileSong),
-          artists: res.artists.map((a) => ({ ...a, artworkUrl: a.artworkUrl ?? undefined })),
-          albums: res.albums.map((a) => ({ ...a, artistName: a.artistName ?? undefined, artworkUrl: a.artworkUrl ?? undefined })),
+          artists: res.artists.map((a: { id: string; name: string; artworkUrl?: string | null }) => ({
+            ...a,
+            artworkUrl: a.artworkUrl ?? undefined,
+          })),
+          albums: res.albums.map((a: { id: string; name: string; artistName?: string | null; artworkUrl?: string | null }) => ({
+            ...a,
+            artistName: a.artistName ?? undefined,
+            artworkUrl: a.artworkUrl ?? undefined,
+          })),
         });
         // Save to recent
         saveRecentSearch(query);
@@ -167,7 +194,8 @@ export const SearchScreen: React.FC = () => {
         {
           text: "Open in Browser",
           onPress: () => {
-            const { Linking } = require("react-native");
+            // NOT ALLowed
+            // const { Linking } = require("react-native");
             Linking.openURL(query.trim());
           },
         },
@@ -198,7 +226,11 @@ export const SearchScreen: React.FC = () => {
         />
         {query.length > 0 && (
           <Pressable onPress={() => setQuery("")}>
-            <Ionicons name="close-circle" size={18} color={AppColors.textSecondary} />
+            <Ionicons
+              name="close-circle"
+              size={18}
+              color={AppColors.textSecondary}
+            />
           </Pressable>
         )}
       </View>
@@ -209,9 +241,15 @@ export const SearchScreen: React.FC = () => {
           <Ionicons name="logo-youtube" size={20} color="#FF0000" />
           <View style={styles.urlBannerText}>
             <Text style={styles.urlBannerTitle}>YouTube link detected</Text>
-            <Text style={styles.urlBannerSubtitle} numberOfLines={1}>{query.trim()}</Text>
+            <Text style={styles.urlBannerSubtitle} numberOfLines={1}>
+              {query.trim()}
+            </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={AppColors.textSecondary} />
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={AppColors.textSecondary}
+          />
         </Pressable>
       )}
 
@@ -253,7 +291,11 @@ export const SearchScreen: React.FC = () => {
       {/* Error */}
       {error && (
         <View style={styles.emptyContainer}>
-          <Ionicons name="alert-circle-outline" size={44} color={AppColors.textSecondary} />
+          <Ionicons
+            name="alert-circle-outline"
+            size={44}
+            color={AppColors.textSecondary}
+          />
           <Text style={styles.emptyText}>{error}</Text>
         </View>
       )}
@@ -275,14 +317,24 @@ export const SearchScreen: React.FC = () => {
                       style={styles.recentItem}
                       onPress={() => setQuery(term)}
                     >
-                      <Ionicons name="time-outline" size={18} color={AppColors.textSecondary} />
-                      <Text style={styles.recentText} numberOfLines={1}>{term}</Text>
+                      <Ionicons
+                        name="time-outline"
+                        size={18}
+                        color={AppColors.textSecondary}
+                      />
+                      <Text style={styles.recentText} numberOfLines={1}>
+                        {term}
+                      </Text>
                       <Pressable
                         style={styles.recentRemove}
                         onPress={() => removeRecentSearch(term)}
                         hitSlop={8}
                       >
-                        <Ionicons name="close" size={16} color={AppColors.textSecondary} />
+                        <Ionicons
+                          name="close"
+                          size={16}
+                          color={AppColors.textSecondary}
+                        />
                       </Pressable>
                     </Pressable>
                   ))}
@@ -296,10 +348,15 @@ export const SearchScreen: React.FC = () => {
                   {BROWSE_CATEGORIES.map((cat) => (
                     <Pressable
                       key={cat.name}
-                      style={[styles.browseCard, { backgroundColor: cat.color + "30" }]}
+                      style={[
+                        styles.browseCard,
+                        { backgroundColor: cat.color + "30" },
+                      ]}
                       onPress={() => setQuery(cat.name)}
                     >
-                      <Text style={[styles.browseCardText, { color: cat.color }]}>
+                      <Text
+                        style={[styles.browseCardText, { color: cat.color }]}
+                      >
                         {cat.name}
                       </Text>
                     </Pressable>
@@ -314,10 +371,12 @@ export const SearchScreen: React.FC = () => {
       {/* No results */}
       {!loading && results && totalResults === 0 && !isUrl && (
         <View style={styles.emptyContainer}>
-          <Ionicons name="search-outline" size={44} color={AppColors.textSecondary} />
-          <Text style={styles.emptyText}>
-            No results for "{query.trim()}"
-          </Text>
+          <Ionicons
+            name="search-outline"
+            size={44}
+            color={AppColors.textSecondary}
+          />
+          <Text style={styles.emptyText}>No results for `{query.trim()}`</Text>
         </View>
       )}
 
@@ -357,7 +416,12 @@ export const SearchScreen: React.FC = () => {
                             style={styles.artistAvatar}
                           />
                         ) : (
-                          <View style={[styles.artistAvatar, styles.artistPlaceholder]}>
+                          <View
+                            style={[
+                              styles.artistAvatar,
+                              styles.artistPlaceholder,
+                            ]}
+                          >
                             <Text style={styles.artistInitial}>
                               {artist.name.charAt(0).toUpperCase()}
                             </Text>
@@ -385,7 +449,12 @@ export const SearchScreen: React.FC = () => {
                             style={styles.artistAvatar}
                           />
                         ) : (
-                          <View style={[styles.artistAvatar, styles.artistPlaceholder]}>
+                          <View
+                            style={[
+                              styles.artistAvatar,
+                              styles.artistPlaceholder,
+                            ]}
+                          >
                             <Ionicons
                               name="disc"
                               size={24}

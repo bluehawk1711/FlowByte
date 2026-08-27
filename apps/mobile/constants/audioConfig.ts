@@ -7,13 +7,14 @@ import { AudioPro, AudioProContentType } from "react-native-audio-pro";
 import { getSongCover } from "@/utils/imageUtils";
 
 import useAudioContext from "../hooks/store/audioContext";
+import useSongMetadata from "../hooks/store/songMetadata";
 import { useSettingsStore } from "../hooks/store/settingsStore";
 import { resolvePlaybackUrl } from "@/lib/playback";
 
 // Configure audio settings
 AudioPro.configure({
   contentType: AudioProContentType.MUSIC,
-  debug: true,
+  debug: __DEV__,
   debugIncludesProgress: false,
   progressIntervalMs: 1000,
   showNextPrevControls: true,
@@ -38,6 +39,9 @@ export const setupAudio = async () => {
       }
     }),
   ]);
+
+  // Hydrate song metadata (custom covers) so they survive restarts
+  await useSongMetadata.getState().loadMetadata();
 
   const settings = useSettingsStore.getState();
   const audioState = useAudioContext.getState();

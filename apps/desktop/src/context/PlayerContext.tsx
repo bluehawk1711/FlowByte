@@ -298,7 +298,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   miniStateRef.current = { song: current, playing, position, duration };
 
   useEffect(() => {
-    const push = () => void emitMiniPlayerState(miniStateRef.current);
+    let lastPushed = '';
+    const push = () => {
+      const state = miniStateRef.current;
+      const key = `${state.song?.id ?? ''}:${state.playing}:${Math.round(state.position)}`;
+      if (key === lastPushed) return;
+      lastPushed = key;
+      void emitMiniPlayerState(state);
+    };
     push();
     const t = setInterval(push, 1000);
     return () => clearInterval(t);

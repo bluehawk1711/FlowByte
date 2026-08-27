@@ -55,8 +55,8 @@ export const startMusicImport = (
 export const cancelMusicImport = (id: string): Promise<void> =>
   invoke<void>('cancel_music_import', { id });
 
-export const readFileBytes = (path: string): Promise<number[]> =>
-  invoke<number[]>('read_file_bytes', { path });
+export const readFileBytes = (path: string): Promise<string> =>
+  invoke<string>('read_file_bytes', { path });
 
 export const deleteFiles = (paths: string[]): Promise<void> =>
   invoke<void>('delete_files', { paths });
@@ -112,4 +112,11 @@ export const onMusicImportDone = (
 
 export const assetUrl = (path: string): string => convertFileSrc(path);
 
-export const toBytes = (bytes: number[]): Uint8Array => Uint8Array.from(bytes);
+export const toBytes = (base64: string): Uint8Array => {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+};

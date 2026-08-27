@@ -195,7 +195,6 @@ export class FlowbyteClient {
   }
 
   async logout(): Promise<void> {
-    await this.request<void>('POST', '/auth/logout').catch(() => undefined);
     await this.tokenStorage.clear();
   }
 
@@ -279,8 +278,9 @@ export class FlowbyteClient {
     try {
       await this.request('GET', `/favorites/${songId}`);
       return true;
-    } catch {
-      return false;
+    } catch (e) {
+      if (e instanceof FlowbyteError && e.status === 404) return false;
+      throw e;
     }
   }
 

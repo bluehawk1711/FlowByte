@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { zustandStorage } from "@/hooks/store/storageAdapter";
+import { isYouTubeUrl, parseYouTubeUrl } from "@flowbyte/validation";
+
+export type { ParsedYouTubeUrl } from "@flowbyte/validation";
+export { isYouTubeUrl, parseYouTubeUrl };
 
 export interface SavedYouTubeItem {
   id: string;
@@ -45,38 +49,6 @@ const useSaved = create<SavedState>()(
     },
   ),
 );
-
-export interface ParsedYouTubeUrl {
-  videoId: string | null;
-  playlistId: string | null;
-  isPlaylist: boolean;
-}
-
-/** Extract video/playlist ids from a YouTube URL (watch/youtu.be/embed/shorts/playlist). */
-export function parseYouTubeUrl(url: string): ParsedYouTubeUrl | null {
-  const trimmed = url.trim();
-  if (!/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/.test(trimmed)) {
-    return null;
-  }
-  try {
-    const parsed = new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`);
-    const playlistId = parsed.searchParams.get("list");
-    const videoId =
-      parsed.searchParams.get("v") ??
-      (parsed.hostname.endsWith("youtu.be") ? parsed.pathname.split("/")[1] : undefined) ??
-      (parsed.pathname.startsWith("/embed/") || parsed.pathname.startsWith("/shorts/")
-        ? parsed.pathname.split("/")[2]
-        : undefined) ??
-      null;
-    return { videoId, playlistId, isPlaylist: videoId === null && playlistId !== null };
-  } catch {
-    return null;
-  }
-}
-
-export function isYouTubeUrl(url: string): boolean {
-  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/.test(url.trim());
-}
 
 /** Get YouTube thumbnail URL from video ID. */
 export function youtubeThumbnail(videoId: string | null, quality: "mq" | "hq" = "mq"): string | undefined {

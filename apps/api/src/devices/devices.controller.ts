@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DevicesService } from './devices.service';
 import { RegisterDeviceDto } from './dto/register-device.dto';
@@ -25,7 +25,7 @@ export class DevicesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove a device' })
-  remove(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
+  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.devicesService.remove(user.id, id);
   }
 }

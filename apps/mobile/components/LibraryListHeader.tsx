@@ -14,10 +14,6 @@ const LibraryListHeader: React.FC = () => {
 
   const [visible, setVisible] = useState(false);
 
-  if(history.length < 0 ){
-    return null
-  }
-
   return (
     <>
       <View style={styles.section}>

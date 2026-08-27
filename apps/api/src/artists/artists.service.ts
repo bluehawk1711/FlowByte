@@ -2,10 +2,10 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { asc, eq, sql } from 'drizzle-orm';
 import { DATABASE, type Database } from '../db/db.module';
 import { albums, artists, songs } from '../db/schema';
-import { STORAGE_PROVIDER, type StorageProvider } from '../storage/storage-provider.interface';
 import { SongsService } from '../songs/songs.service';
 import { CacheService } from '../cache/cache.service';
 import type { Album, Artist, Song } from '@flowbyte/types';
+// import { STORAGE_PROVIDER, StorageProvider } from 'src/storage/storage-provider.interface';
 
 const LIST_TTL = 300;
 const DETAIL_TTL = 300;
@@ -15,7 +15,7 @@ export class ArtistsService {
   constructor(
     @Inject(DATABASE) private readonly db: Database,
     private readonly songsService: SongsService,
-    @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+    // @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
     private readonly cache: CacheService,
   ) {}
 

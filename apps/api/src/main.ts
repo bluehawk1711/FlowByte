@@ -1,7 +1,10 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { json } from 'express';
 import { AppModule } from './app.module';
+
+const CORS_ORIGINS = process.env.CORS_ORIGINS?.split(',').map((s) => s.trim()).filter(Boolean);
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -9,16 +12,18 @@ async function bootstrap(): Promise<void> {
 
   app.setGlobalPrefix('api');
   app.enableCors({
-    origin: true,
+    origin: CORS_ORIGINS?.length ? CORS_ORIGINS : ['http://localhost:1420', 'http://localhost:8081'],
     credentials: true,
   });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       transform: true,
-      forbidNonWhitelisted: false,
+      forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
     }),
   );
+  app.use(json({ limit: '50mb' }));
 
   const config = new DocumentBuilder()
     .setTitle('Flowbyte API')

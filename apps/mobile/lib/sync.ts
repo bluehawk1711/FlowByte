@@ -28,7 +28,10 @@ export function toMobileSong(song: ApiSong): NonNullable<Song> {
 }
 
 function toApiSongId(song: NonNullable<Song>): string | null {
-  return song.apiSongId ?? (song.source === "api" ? song.id.slice(API_PREFIX.length) : null);
+  return (
+    song.apiSongId ??
+    (song.source === "api" ? song.id.slice(API_PREFIX.length) : null)
+  );
 }
 
 export type SyncResult = {
@@ -43,8 +46,8 @@ async function syncFavorites(errors: string[]): Promise<number> {
   if (!api) return 0;
   const local = useFavourite.getState().songs.filter(Boolean);
   const server = await api.getFavorites();
-  const serverIds = new Set(server.map((s) => s.id));
-  const serverSongs = new Map(server.map((s) => [s.id, s]));
+  const serverIds = new Set(server.map((s: ApiSong) => s.id));
+  const serverSongs = new Map(server.map((s: ApiSong) => [s.id, s]));
 
   const remoteSongs: NonNullable<Song>[] = [];
   for (const s of server) {
@@ -184,7 +187,10 @@ export async function recordApiPlay(song: NonNullable<Song>): Promise<void> {
   const apiSongId = toApiSongId(song);
   if (!api || !apiSongId) return;
   try {
-    await api.recordPlay({ songId: apiSongId, deviceId: await getDeviceIdSafe() });
+    await api.recordPlay({
+      songId: apiSongId,
+      deviceId: await getDeviceIdSafe(),
+    });
   } catch {
     // offline — history recorded locally, pushed next sync
   }

@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Put,
@@ -29,7 +30,7 @@ export class PlaylistsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Playlist detail with ordered songs' })
-  detail(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<PlaylistDetail> {
+  detail(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<PlaylistDetail> {
     return this.playlistsService.getDetail(user.id, id);
   }
 
@@ -43,7 +44,7 @@ export class PlaylistsController {
   @ApiOperation({ summary: 'Rename / update a playlist' })
   update(
     @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePlaylistDto,
   ): Promise<Playlist> {
     return this.playlistsService.update(user.id, id, dto);
@@ -52,7 +53,7 @@ export class PlaylistsController {
   @Delete(':id')
   @HttpCode(200)
   @ApiOperation({ summary: 'Delete a playlist' })
-  remove(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
+  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.playlistsService.remove(user.id, id);
   }
 
@@ -61,7 +62,7 @@ export class PlaylistsController {
   @ApiOperation({ summary: 'Add a song to a playlist' })
   addSong(
     @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AddSongDto,
   ): Promise<void> {
     return this.playlistsService.addSong(user.id, id, dto.songId);
@@ -72,8 +73,8 @@ export class PlaylistsController {
   @ApiOperation({ summary: 'Remove a song from a playlist' })
   removeSong(
     @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
-    @Param('songId') songId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('songId', ParseUUIDPipe) songId: string,
   ): Promise<void> {
     return this.playlistsService.removeSong(user.id, id, songId);
   }
@@ -82,7 +83,7 @@ export class PlaylistsController {
   @ApiOperation({ summary: 'Reorder playlist songs' })
   reorder(
     @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReorderSongsDto,
   ): Promise<void> {
     return this.playlistsService.reorder(user.id, id, dto.songIds);

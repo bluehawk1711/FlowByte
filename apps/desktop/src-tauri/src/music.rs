@@ -231,12 +231,14 @@ pub async fn cancel_music_import(id: String) -> Result<(), String> {
     }
 }
 
-/// Read a local file as bytes (used to upload staged audio/artwork to the API).
+/// Read a local file as base64 string (used to upload staged audio/artwork to the API).
 #[tauri::command]
-pub async fn read_file_bytes(path: String) -> Result<Vec<u8>, String> {
-    tokio::fs::read(&path)
+pub async fn read_file_bytes(path: String) -> Result<String, String> {
+    use base64::Engine;
+    let data = tokio::fs::read(&path)
         .await
-        .map_err(|e| format!("read {path}: {e}"))
+        .map_err(|e| format!("read {path}: {e}"))?;
+    Ok(base64::engine::general_purpose::STANDARD.encode(data))
 }
 
 /// Delete staged files after a successful upload (no orphans on disk).
