@@ -74,7 +74,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [gdriveModalVisible, setGdriveModalVisible] = useState(false);
 
   useEffect(() => {
-    void client?.getGoogleDriveStatus().then((s) => setGdriveConnected(s.connected)).catch(() => {});
+    void client?.getGoogleDriveStatus().then((s: { connected: boolean }) => setGdriveConnected(s.connected)).catch(() => {});
   }, []);
 
   const handleSignIn = async () => {
