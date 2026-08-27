@@ -20,6 +20,7 @@ import { SearchModule } from './search/search.module';
 import { SongsModule } from './songs/songs.module';
 import { StorageModule } from './storage/storage.module';
 import { StorageController } from './storage/storage.controller';
+import { GoogleDriveModule } from './storage/google-drive/google-drive.module';
 import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
@@ -45,6 +46,7 @@ import { UploadsModule } from './uploads/uploads.module';
     UploadsModule,
     SearchModule,
     RealtimeModule,
+    GoogleDriveModule,
   ],
   controllers: [StorageController],
   providers: [

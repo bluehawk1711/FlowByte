@@ -3,13 +3,14 @@ import { MiniPlayer } from "@/components/MiniPlayer";
 import { SettingsListItem } from "@/components/SettingsListItem";
 import { AppColors } from "@/constants/theme";
 import { useApiSync } from "@/hooks/useApiSync";
-import { getApiUrl, setApiUrl } from "@/lib/api";
+import { getApiUrl, setApiUrl, client } from "@/lib/api";
 import { useSettingsStore } from "@/hooks/store/settingsStore";
 import useSongMetadata from "@/hooks/store/songMetadata";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -66,6 +67,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [authIdentifier, setAuthIdentifier] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
+
+  // Google Drive state
+  const [gdriveConnected, setGdriveConnected] = useState(false);
+  const [gdriveLoading, setGdriveLoading] = useState(false);
+  const [gdriveModalVisible, setGdriveModalVisible] = useState(false);
+
+  useEffect(() => {
+    void client?.getGoogleDriveStatus().then((s) => setGdriveConnected(s.connected)).catch(() => {});
+  }, []);
 
   const handleSignIn = async () => {
     if (!authIdentifier || !authPassword) {
@@ -184,6 +194,64 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         },
       ],
     );
+  };
+
+  const handleConnectGoogleDrive = async () => {
+    setGdriveLoading(true);
+    try {
+      const res = await client?.getGoogleDriveAuthUrl();
+      if (res?.url) {
+        Linking.openURL(res.url);
+        Alert.alert(
+          "Google Drive",
+          "Complete sign-in in your browser, then return to the app.",
+        );
+      }
+    } catch {
+      Alert.alert("Google Drive", "Failed to get auth URL");
+    } finally {
+      setGdriveLoading(false);
+    }
+  };
+
+  const handleDisconnectGoogleDrive = async () => {
+    Alert.alert(
+      "Google Drive",
+      "Disconnect Google Drive? Your files will remain in your Drive.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Disconnect",
+          style: "destructive",
+          onPress: async () => {
+            setGdriveLoading(true);
+            try {
+              await client?.disconnectGoogleDrive();
+              setGdriveConnected(false);
+              Alert.alert("Google Drive", "Disconnected");
+            } catch {
+              Alert.alert("Google Drive", "Failed to disconnect");
+            } finally {
+              setGdriveLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleCheckGdriveStatus = async () => {
+    try {
+      const s = await client?.getGoogleDriveStatus();
+      setGdriveConnected(s?.connected ?? false);
+      if (s?.connected) {
+        Alert.alert("Google Drive", "Connected");
+      } else {
+        Alert.alert("Google Drive", "Not connected yet. Sign in via browser first.");
+      }
+    } catch {
+      Alert.alert("Google Drive", "Failed to check status");
+    }
   };
 
   return (
@@ -356,6 +424,56 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 onPress={handleSignOut}
               />
             </>
+          )}
+        </View>
+
+        {/* Google Drive Section */}
+        <Text style={styles.sectionTitle}>GOOGLE DRIVE</Text>
+        <View style={styles.section}>
+          {gdriveConnected ? (
+            <>
+              <SettingsListItem
+                icon="cloud-done"
+                iconColor="#4285F4"
+                iconBgColor="#1A2A3A"
+                label="Connected"
+                description="Files stored in Google Drive"
+                type="navigation"
+                value=""
+                onPress={handleCheckGdriveStatus}
+              />
+              <SettingsListItem
+                icon="cloud-upload"
+                iconColor="#22C55E"
+                iconBgColor="#1A2A1A"
+                label="Check Status"
+                description="Verify connection"
+                type="navigation"
+                value=""
+                onPress={handleCheckGdriveStatus}
+              />
+              <SettingsListItem
+                icon="cloud-offline"
+                iconColor="#EF4444"
+                iconBgColor="#2A1A1A"
+                label="Disconnect"
+                description="Remove Google Drive access"
+                type="navigation"
+                value=""
+                onPress={handleDisconnectGoogleDrive}
+              />
+            </>
+          ) : (
+            <SettingsListItem
+              icon="cloud-outline"
+              iconColor="#4285F4"
+              iconBgColor="#1A2A3A"
+              label={gdriveLoading ? "Connecting..." : "Connect Google Drive"}
+              description="Store your library in the cloud"
+              type="navigation"
+              value=""
+              onPress={handleConnectGoogleDrive}
+            />
           )}
         </View>
       </ScrollView>

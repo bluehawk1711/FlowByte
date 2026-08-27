@@ -261,3 +261,19 @@ export interface PlaybackChangedEvent {
 export type RealtimeEvent =
   | { event: 'library:changed'; data: LibraryChangedEvent }
   | { event: 'playback:changed'; data: PlaybackChangedEvent };
+
+// ---------------------------------------------------------------------------
+// Cloud Storage
+// ---------------------------------------------------------------------------
+
+export type StorageProviderType = 'local' | 'backblaze' | 'google-drive';
+
+export interface CloudConnectionStatus {
+  connected: boolean;
+  provider: string;
+  expiresAt: string | null;
+}
+
+export interface StoragePreferences {
+  defaultProvider: StorageProviderType;
+}

@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react';
-import { LogOut, MonitorPlay, Server } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Cloud, CloudOff, LogOut, MonitorPlay, Server } from 'lucide-react';
 import { toast } from 'sonner';
-import { getSettings, saveSettings } from '../lib/api';
+import { getSettings, saveSettings, client } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -14,6 +14,13 @@ export function SettingsPage() {
   const [transcode, setTranscode] = useState(getSettings().importTranscode);
   const [notify, setNotify] = useState(getSettings().notifyOnComplete);
   const [iframePreview, setIframePreview] = useState(getSettings().iframePreview);
+  const [cloudStatus, setCloudStatus] = useState<{ connected: boolean; provider: string } | null>(null);
+  const [cloudLoading, setCloudLoading] = useState(false);
+
+  // Check Google Drive connection status
+  useEffect(() => {
+    void client.getGoogleDriveStatus().then(setCloudStatus).catch(() => {});
+  }, []);
 
   const save = useCallback(() => {
     saveSettings({
@@ -25,6 +32,32 @@ export function SettingsPage() {
     });
     toast.success('Settings saved');
   }, [apiUrl, bitrate, transcode, notify, iframePreview]);
+
+  const handleConnectGoogleDrive = async () => {
+    setCloudLoading(true);
+    try {
+      const { url } = await client.getGoogleDriveAuthUrl();
+      window.open(url, '_blank');
+      toast.info('Complete sign-in in your browser, then refresh this page.');
+    } catch {
+      toast.error('Failed to get Google Drive auth URL');
+    } finally {
+      setCloudLoading(false);
+    }
+  };
+
+  const handleDisconnectGoogleDrive = async () => {
+    setCloudLoading(true);
+    try {
+      await client.disconnectGoogleDrive();
+      setCloudStatus({ connected: false, provider: '' });
+      toast.success('Google Drive disconnected');
+    } catch {
+      toast.error('Failed to disconnect');
+    } finally {
+      setCloudLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-xl space-y-6 p-6">
@@ -49,6 +82,51 @@ export function SettingsPage() {
             onChange={(e) => setApiUrl(e.target.value)}
             placeholder="http://localhost:3001/api"
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Cloud className="h-4 w-4" />
+            Cloud storage
+          </CardTitle>
+          <CardDescription>
+            Connect Google Drive to store your music library in the cloud.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {cloudStatus?.connected ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-ink-2">
+                <Cloud className="h-4 w-4 text-green-500" />
+                Connected to Google Drive
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDisconnectGoogleDrive}
+                disabled={cloudLoading}
+              >
+                Disconnect
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-ink-2">
+                <CloudOff className="h-4 w-4 text-ink-3" />
+                Not connected
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleConnectGoogleDrive}
+                disabled={cloudLoading}
+              >
+                {cloudLoading ? 'Connecting...' : 'Connect Google Drive'}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

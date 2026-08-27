@@ -8,6 +8,7 @@ import type {
   Artist,
   AuthResponse,
   AuthTokens,
+  CloudConnectionStatus,
   Device,
   LibrarySearchParams,
   NormalizedLyrics,
@@ -460,6 +461,30 @@ export class FlowbyteClient {
 
   async getLyrics(songId: string): Promise<NormalizedLyrics | null> {
     return this.request<NormalizedLyrics | null>('GET', `/lyrics/${songId}`);
+  }
+
+  // -------------------------------------------------------------------------
+  // Cloud Storage (Google Drive)
+  // -------------------------------------------------------------------------
+
+  async getGoogleDriveAuthUrl(): Promise<{ url: string }> {
+    return this.request<{ url: string }>('GET', '/storage/google-drive/auth-url');
+  }
+
+  async getGoogleDriveStatus(): Promise<CloudConnectionStatus> {
+    return this.request<CloudConnectionStatus>('GET', '/storage/google-drive/status');
+  }
+
+  async disconnectGoogleDrive(): Promise<void> {
+    return this.request<void>('DELETE', '/storage/google-drive/disconnect');
+  }
+
+  async getDefaultStorageProvider(): Promise<{ provider: string }> {
+    return this.request<{ provider: string }>('GET', '/storage/google-drive/default-provider');
+  }
+
+  async setDefaultStorageProvider(provider: string): Promise<void> {
+    return this.request<void>('PUT', '/storage/google-drive/default-provider', { provider });
   }
 
   // -------------------------------------------------------------------------

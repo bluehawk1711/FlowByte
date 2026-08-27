@@ -219,6 +219,45 @@ export const playbackState = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Cloud storage tokens (OAuth — Google Drive, etc.)
+// ---------------------------------------------------------------------------
+
+export const cloudTokens = pgTable(
+  'cloud_tokens',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(), // 'google-drive'
+    accessToken: text('access_token').notNull(),
+    refreshToken: text('refresh_token'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    scope: text('scope'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('cloud_tokens_user_provider_unique').on(t.userId, t.provider),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// User storage preferences (default provider per user)
+// ---------------------------------------------------------------------------
+
+export const userStoragePreferences = pgTable(
+  'user_storage_preferences',
+  {
+    userId: uuid('user_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    defaultProvider: text('default_provider').notNull().default('local'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+);
+
+// ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
 
@@ -270,6 +309,14 @@ export const playHistoryRelations = relations(playHistory, ({ one }) => ({
   device: one(devices, { fields: [playHistory.deviceId], references: [devices.id] }),
 }));
 
+export const cloudTokensRelations = relations(cloudTokens, ({ one }) => ({
+  user: one(users, { fields: [cloudTokens.userId], references: [users.id] }),
+}));
+
+export const userStoragePreferencesRelations = relations(userStoragePreferences, ({ one }) => ({
+  user: one(users, { fields: [userStoragePreferences.userId], references: [users.id] }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Device = typeof devices.$inferSelect;
@@ -282,3 +329,6 @@ export type PlaylistSong = typeof playlistSongs.$inferSelect;
 export type Favorite = typeof favorites.$inferSelect;
 export type PlayHistory = typeof playHistory.$inferSelect;
 export type PlaybackState = typeof playbackState.$inferSelect;
+export type CloudToken = typeof cloudTokens.$inferSelect;
+export type NewCloudToken = typeof cloudTokens.$inferInsert;
+export type UserStoragePreference = typeof userStoragePreferences.$inferSelect;
