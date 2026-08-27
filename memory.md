@@ -40,12 +40,15 @@ Persistent project memory. If this file disagrees with code, the code wins and t
 | **AddMusicModal polish** | ✅ URL input + drag-drop zone + preview area per UI spec |
 | **SongActionsMenu (mobile)** | ✅ Bottom sheet with drag handle + song preview + action list per UI spec |
 | **SSE Realtime** | ✅ Server-Sent Events for live library/playback updates (API + desktop + mobile) |
+| **Code Review Fixes** | ✅ All 20 issues from RESEARCH.md addressed (HMAC tokens, CORS, rate limiting, CSP, etc.) |
+| **Google Drive Cloud Storage** | ✅ OAuth flow, storage provider, desktop/mobile UI, API endpoints |
+| **CI Fixes** | ✅ Storage module files committed, mobile workflow builds shared packages, Rust compilation errors fixed |
 
 ## Key Decisions
 
 - Desktop = **new Tauri 2 + React + TS** app (`apps/desktop`); Electron app = frozen reference (port logic, never edit).
 - yt-dlp/FFmpeg spawned from Rust; never reimplemented. Storage via `StorageProvider` only. No audio in Postgres, only storage keys. Postgres = source of truth; Upstash Redis = read-through cache only.
-- Rust local builds impossible (no MSVC toolchain; Git's `link.exe` shadows) → Rust verified only via GitHub Actions (CI-only).
+- Rust local builds impossible (no MSVC toolchain; Git's `link.exe` shadows) → Rust verified only via GitHub Actions (CI-only). tokio `time` feature required for `tokio::time::sleep`.
 - Mobile: keep existing player core (react-native-audio-pro v10, zustand, Expo SDK 54); **additive changes only**. Audio engine stays audio-pro (expo-audio lacks next/prev + remote events).
 - Mobile audioContext now has queue management: `addToQueue(song)`, `insertNext(song)`, `removeFromQueue(index)`, `clearQueue()`, `moveInQueue(from, to)`. `playList()` replaces the old `setPlaylist`+`setSong` pattern.
 - Lyrics translation: future feature, not implemented. Song IDs namespaced `local:` / `api:`.
@@ -81,6 +84,7 @@ Persistent project memory. If this file disagrees with code, the code wins and t
 ## CI / Repo
 
 - Root workflows (manual, `workflow_dispatch`): `desktop-build.yml` (Rust+Tauri, dev/release), `mobile-build.yml` (prebuild + gradlew APK, no EAS). No secrets required.
+- Mobile workflow has "Build shared packages" step before typecheck (was missing, caused CI failures). Desktop workflow already had it.
 - API client methods (shared): login/register, library CRUD, `getPlaylists/getPlaylist/createPlaylist/deletePlaylist/addSongToPlaylist`, uploads, lyrics, favorites, playback sync, registerDevice.
 
 ## Environment / Gotchas
