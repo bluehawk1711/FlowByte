@@ -8,8 +8,12 @@ onlyBuiltDependencies:
   - "@tailwindcss/oxide"
   - unrs-resolver
 allowBuilds:
-  '@scarf/scarf': true
+  "@scarf/scarf": true
   electron: true
-  esbuild: set this to true or false
-  sharp: set this to true or false
+  esbuild: true
+  sharp: true
+  sharp@0.34.5: true
+  esbuild@0.18.20: true
+  esbuild@0.25.12 : true
+  esbuild@0.28.2: true
   unrs-resolver: true
