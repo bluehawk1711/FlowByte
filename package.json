@@ -5,6 +5,7 @@
   "description": "Flowbyte — private self-hosted personal music library and streaming system",
   "scripts": {
     "build": "pnpm -r --filter \"@flowbyte/*\" build",
+    "build:api": "pnpm -r --filter \"@flowbyte/types\" --filter \"@flowbyte/config\" --filter \"@flowbyte/validation\" run build && pnpm --filter @flowbyte/api build",
     "typecheck": "pnpm -r --filter \"@flowbyte/*\" typecheck",
     "lint": "pnpm -r --filter \"@flowbyte/*\" lint",
     "desktop:dev": "pnpm --filter @flowbyte/desktop tauri:dev",
