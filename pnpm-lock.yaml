@@ -58,6 +58,9 @@ importers:
       drizzle-orm:
         specifier: ^0.44.0
         version: 0.44.7(@types/pg@8.21.0)(@upstash/redis@1.38.2)(pg@8.23.0)
+      express:
+        specifier: ^5.1.0
+        version: 5.2.1
       googleapis:
         specifier: ^176.0.0
         version: 176.0.0
