@@ -46,6 +46,8 @@ jobs:
 
       - name: Build desktop frontend
         run: pnpm --filter @flowbyte/desktop run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: Build Tauri app (dev)
         if: github.event.inputs.build_type == 'dev'
