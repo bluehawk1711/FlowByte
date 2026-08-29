@@ -64,11 +64,15 @@ jobs:
         if: github.event.inputs.build_type == 'dev'
         working-directory: apps/mobile/android
         run: ./gradlew assembleDebug
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
 
       - name: Build release APK
         if: github.event.inputs.build_type == 'release'
         working-directory: apps/mobile/android
         run: ./gradlew assembleRelease
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
 
       - name: Upload debug APK
         if: github.event.inputs.build_type == 'dev'
