@@ -12,7 +12,7 @@ export function defaultApiUrl(): string {
   if (typeof process !== 'undefined' && process.env?.VITE_API_URL) {
     return process.env.VITE_API_URL;
   }
-  return `http://localhost:${API_DEFAULT_PORT}`;
+  return 'https://flowbyte.onrender.com';
 }
 
 export function normalizeApiUrl(url: string): string {
