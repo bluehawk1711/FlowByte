@@ -1,7 +1,7 @@
 import { ColorChooser } from "@/components/ColorChooser";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { SettingsListItem } from "@/components/SettingsListItem";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { useApiSync } from "@/hooks/useApiSync";
 import { getApiUrl, setApiUrl, client } from "@/lib/api";
 import { useSettingsStore } from "@/hooks/store/settingsStore";
@@ -33,6 +33,7 @@ interface SettingsScreenProps {
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onBackPress,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
 
   // Store
@@ -43,6 +44,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     setAccentPurple,
     accentPink,
     setAccentPink,
+    backgroundMode,
+    setBackgroundMode,
     // alwaysShuffle,
     // toggleAlwaysShuffle,
     // alwaysRepeat,
@@ -277,6 +280,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         {/* Appearance Section */}
         <Text style={styles.sectionTitle}>APPEARANCE</Text>
         <View style={styles.section}>
+          <SettingsListItem
+            icon="contrast"
+            iconColor={backgroundMode === "dark" ? AppColors.textPrimary : AppColors.textLight}
+            iconBgColor={AppColors.divider}
+            label="Background Theme"
+            description={
+              backgroundMode === "dark"
+                ? "Dark — tap to switch to Light"
+                : "Light — tap to switch to Dark"
+            }
+            type="navigation"
+            value={backgroundMode === "dark" ? "Dark" : "Light"}
+            onPress={() =>
+              setBackgroundMode(backgroundMode === "dark" ? "light" : "dark")
+            }
+          />
           <SettingsListItem
             icon="color-palette"
             iconColor={accentColor}
@@ -590,7 +609,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,

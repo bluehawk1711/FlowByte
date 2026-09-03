@@ -1,31 +1,41 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ChevronDown,
   ChevronRight,
-  Download,
+  Copy,
+  HardDrive,
+  ImagePlus,
   ListVideo,
   Loader2,
   Music4,
   Play,
   Trash2,
   X,
-} from 'lucide-react';
+} from '../lib/icons';
 import { toast } from 'sonner';
 import { useDownloads } from '../context/DownloadContext';
+import { usePlayer } from '../context/PlayerContext';
 import {
+  client,
   deleteSavedPlaylist,
   getSavedPlaylists,
   getSettings,
+  localImportSong,
   removeSavedItem,
+  subscribeSavedPlaylists,
   type SavedPlaylist,
 } from '../lib/api';
 import { YouTubeEmbed } from '../components/YouTubeEmbed';
+import { assetUrl } from '../lib/tauri';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 
+type SavedItem = SavedPlaylist['items'][number];
+
 export function SavedPage() {
-  const { startDownload, importToLibrary } = useDownloads();
+  const { startDownload, importToLibrary, importPlaylistToLibrary } = useDownloads();
+  const { playSong } = usePlayer();
   const [playlists, setPlaylists] = useState<SavedPlaylist[]>(() => getSavedPlaylists());
   const [expanded, setExpanded] = useState<string | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
@@ -34,6 +44,53 @@ export function SavedPage() {
   const iframePreview = getSettings().iframePreview;
 
   const refresh = useCallback(() => setPlaylists(getSavedPlaylists()), []);
+
+  // Keep in sync when an import stamps a local file / library id on any item.
+  useEffect(() => subscribeSavedPlaylists(refresh), [refresh]);
+
+  const copyPath = (path: string) => {
+    void navigator.clipboard
+      ?.writeText(path)
+      .then(() => toast.success('File path copied'))
+      .catch(() => toast.error('Could not copy the file path'));
+  };
+
+  /**
+   * Playback order: cloud library copy → local file → YouTube embed. When the
+   * cloud copy can't be reached the item still plays through its original
+   * YouTube URL instead of erroring (saved items are URLs, not uploads).
+   */
+  const startItemPlayback = (item: SavedItem) => {
+    if (item.importedSongId) {
+      void client
+        .getSong(item.importedSongId)
+        .then((song) => playSong(song))
+        .catch(() => {
+          if (iframePreview && (item.videoId || item.playlistId)) {
+            toast.info('Library copy unreachable — playing the YouTube preview');
+            setPlaying(item.id);
+          } else {
+            toast.error('Could not load song from library');
+          }
+        });
+    } else if (item.localFilePath) {
+      // Imported locally but never uploaded — play the file.
+      playSong(
+        localImportSong({
+          id: `saved:${item.id}`,
+          title: item.title,
+          artistName: null,
+          duration: 0,
+          sourceUrl: item.url,
+          sourceId: item.videoId,
+          filePath: item.localFilePath,
+          artworkPath: item.localArtworkPath,
+        }),
+      );
+    } else {
+      setPlaying(playing === item.id ? null : item.id);
+    }
+  };
 
   const onDeletePlaylist = (id: string) => {
     deleteSavedPlaylist(id);
@@ -56,9 +113,12 @@ export function SavedPage() {
       if (isImport) {
         await importToLibrary(item.url);
         toast.success('Import started — see Downloads');
+      } else if (item.isPlaylist) {
+        await importPlaylistToLibrary(item.url);
+        toast.success('Playlist import started — see Downloads');
       } else {
-        await startDownload(item.url, 'playlist');
-        toast.success('Playlist download started — see Downloads');
+        await startDownload(item.url, 'audio');
+        toast.success('Download started — see Downloads');
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Download failed to start');
@@ -70,7 +130,7 @@ export function SavedPage() {
   const total = playlists.reduce((n, p) => n + p.items.length, 0);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-6">
+    <div className="w-full space-y-6 p-8">
       <div>
         <h1 className="text-2xl font-semibold">Saved</h1>
         <p className="text-sm text-ink-2">
@@ -131,28 +191,83 @@ export function SavedPage() {
                     className="rounded-md border border-line bg-card/60 p-3"
                   >
                     <div className="flex items-center gap-3">
-                      {item.thumbnail && (
-                        <img
-                          src={item.thumbnail}
-                          alt=""
-                          className="h-12 w-20 shrink-0 rounded object-cover"
-                        />
-                      )}
+                      <button
+                        type="button"
+                        aria-label={`Play ${item.title}`}
+                        title="Play"
+                        onClick={() => startItemPlayback(item)}
+                        className="shrink-0 cursor-pointer rounded transition-transform duration-200 hover:scale-[1.02] active:scale-95"
+                      >
+                        {(item.localFilePath && item.localArtworkPath) || item.thumbnail ? (
+                          <img
+                            src={
+                              item.localFilePath && item.localArtworkPath
+                                ? assetUrl(item.localArtworkPath)
+                                : (item.thumbnail ?? undefined)
+                            }
+                            alt=""
+                            className="h-12 w-20 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-20 items-center justify-center rounded bg-card">
+                            <ImagePlus className="h-4 w-4 text-ink-3" />
+                          </div>
+                        )}
+                      </button>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{item.title}</p>
-                        <p className="mt-0.5 text-xs text-ink-3">
-                          {item.isPlaylist ? 'YouTube playlist' : 'YouTube video'} · saved{' '}
-                          {new Date(item.savedAt).toLocaleDateString()}
-                        </p>
+                        <button
+                          type="button"
+                          aria-label={`Play ${item.title}`}
+                          onClick={() => startItemPlayback(item)}
+                          className="block w-full cursor-pointer text-left"
+                        >
+                          <p className="truncate text-sm font-medium group-hover:text-accent-hover">
+                            {item.title}
+                          </p>
+                          <p className="mt-0.5 text-xs text-ink-3">
+                            {item.isPlaylist ? 'YouTube playlist' : 'YouTube video'} · saved{' '}
+                            {new Date(item.savedAt).toLocaleDateString()}
+                            {item.importedSongId ? (
+                              <span className="ml-1 text-accent"> · In library</span>
+                            ) : item.localFilePath ? (
+                              <span className="ml-1 text-accent"> · Downloaded</span>
+                            ) : null}
+                          </p>
+                        </button>
+                        {item.localFilePath && (
+                          <p className="mt-1 flex items-center gap-1.5 text-[11px] text-ink-3">
+                            <HardDrive className="h-3 w-3 shrink-0" />
+                            <span className="truncate" title={item.localFilePath}>
+                              {item.localFilePath}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => copyPath(item.localFilePath as string)}
+                              className="shrink-0 text-ink-3 transition-colors hover:text-accent"
+                              aria-label="Copy file path"
+                              title="Copy file path"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          </p>
+                        )}
                       </div>
                       <Button
                         variant="secondary"
                         size="sm"
-                        disabled={!iframePreview || playing === item.id}
-                        onClick={() => setPlaying(playing === item.id ? null : item.id)}
+                        disabled={
+                          item.importedSongId || item.localFilePath
+                            ? playing === item.id
+                            : !iframePreview || playing === item.id
+                        }
+                        onClick={() => startItemPlayback(item)}
                       >
                         <Play className="h-3.5 w-3.5" />
-                        Play
+                        {item.importedSongId
+                          ? 'Play'
+                          : item.localFilePath
+                            ? 'Play file'
+                            : 'Preview'}
                       </Button>
                       <Button
                         variant="outline"
@@ -163,18 +278,16 @@ export function SavedPage() {
                         }
                         title={
                           item.isPlaylist
-                            ? 'Download all videos as MP3'
+                            ? 'Import all videos to library'
                             : 'Import into your library'
                         }
                       >
                         {busyId === item.id ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : item.isPlaylist ? (
-                          <Download className="h-3.5 w-3.5" />
                         ) : (
                           <Music4 className="h-3.5 w-3.5" />
                         )}
-                        {item.isPlaylist ? 'Download' : 'Import'}
+                        Import
                       </Button>
                       <Button
                         variant="ghost"
@@ -186,7 +299,7 @@ export function SavedPage() {
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
-                    {playing === item.id && (
+                    {playing === item.id && !item.importedSongId && !item.localFilePath && (
                       <div className="mt-3 space-y-2">
                         <YouTubeEmbed
                           videoId={item.videoId}
@@ -198,8 +311,8 @@ export function SavedPage() {
                             void onDownload(item, !item.isPlaylist)
                           }
                         >
-                          <Download className="h-3.5 w-3.5" />
-                          Download
+                          <Music4 className="h-3.5 w-3.5" />
+                          Import
                         </Button>
                       </div>
                     )}

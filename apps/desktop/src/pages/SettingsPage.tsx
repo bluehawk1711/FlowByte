@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Cloud, CloudOff, LogOut, MonitorPlay, Server } from 'lucide-react';
+import { Cloud, CloudOff, LogOut, MonitorPlay, Server } from '../lib/icons';
 import { toast } from 'sonner';
 import { getSettings, saveSettings, client } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { AppearanceSettings } from '../components/AppearanceSettings';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -13,6 +14,7 @@ export function SettingsPage() {
   const [bitrate, setBitrate] = useState(String(getSettings().importBitrate));
   const [transcode, setTranscode] = useState(getSettings().importTranscode);
   const [notify, setNotify] = useState(getSettings().notifyOnComplete);
+  const [uploadImports, setUploadImports] = useState(getSettings().uploadImports);
   const [iframePreview, setIframePreview] = useState(getSettings().iframePreview);
   const [cloudStatus, setCloudStatus] = useState<{ connected: boolean; provider: string } | null>(null);
   const [cloudLoading, setCloudLoading] = useState(false);
@@ -28,10 +30,11 @@ export function SettingsPage() {
       importBitrate: Math.min(320, Math.max(64, Number(bitrate) || 160)),
       importTranscode: transcode,
       notifyOnComplete: notify,
+      uploadImports,
       iframePreview,
     });
     toast.success('Settings saved');
-  }, [apiUrl, bitrate, transcode, notify, iframePreview]);
+  }, [apiUrl, bitrate, transcode, notify, uploadImports, iframePreview]);
 
   const handleConnectGoogleDrive = async () => {
     setCloudLoading(true);
@@ -60,11 +63,13 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-xl space-y-6 p-6">
+    <div className="mx-auto w-full max-w-4xl space-y-6 p-8">
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
         <p className="text-sm text-ink-2">Signed in as {user?.username ?? '…'}</p>
       </div>
+
+      <AppearanceSettings />
 
       <Card>
         <CardHeader>
@@ -166,6 +171,21 @@ export function SettingsPage() {
               type="checkbox"
               checked={notify}
               onChange={(e) => setNotify(e.target.checked)}
+              className="h-4 w-4 accent-accent"
+            />
+          </label>
+          <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
+            <span className="flex flex-col gap-0.5 text-ink-2">
+              Upload imports to cloud library automatically
+              <span className="text-xs font-normal text-ink-3">
+                Off by default — imports download locally and stay playable; upload
+                them any time from the Downloads page.
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={uploadImports}
+              onChange={(e) => setUploadImports(e.target.checked)}
               className="h-4 w-4 accent-accent"
             />
           </label>

@@ -1,5 +1,5 @@
 import { MiniPlayer } from "@/components/MiniPlayer";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SongList from "../SongList";
 
 export const LibraryScreen: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -94,7 +95,7 @@ export const LibraryScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -139,3 +140,5 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+

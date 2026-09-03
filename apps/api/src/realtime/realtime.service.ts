@@ -7,7 +7,7 @@ export interface RealtimeEvent {
 }
 
 export interface LibraryChangedPayload {
-  type: 'song_added' | 'song_deleted' | 'favorites_changed' | 'playlist_changed';
+  type: 'song_added' | 'song_deleted' | 'song_updated' | 'favorites_changed' | 'playlist_changed';
   songId?: string;
   playlistId?: string;
 }

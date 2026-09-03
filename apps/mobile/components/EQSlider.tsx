@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import React from "react";
 import { Animated, PanResponder, StyleSheet, Text, View } from "react-native";
 
@@ -13,6 +13,7 @@ export const EQSlider: React.FC<EQSliderProps> = ({
   value,
   onValueChange,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const SLIDER_HEIGHT = 180;
   const HANDLE_SIZE = 20;
 
@@ -84,7 +85,7 @@ export const EQSlider: React.FC<EQSliderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     alignItems: "center",
     width: 50,
@@ -144,3 +145,5 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
+
+

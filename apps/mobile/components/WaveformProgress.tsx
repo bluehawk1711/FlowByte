@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -15,6 +15,7 @@ export const WaveformProgress: React.FC<WaveformProgressProps> = ({
   progress,
   barCount = 50,
 }) => {
+  const styles = useThemedStyles(createStyles);
   
   const formatTime = (ms: number) => {
     const totalSec = Math.floor(ms);
@@ -56,7 +57,7 @@ export const WaveformProgress: React.FC<WaveformProgressProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     width: "100%",
     paddingHorizontal: 24,
@@ -82,3 +83,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 });
+
+

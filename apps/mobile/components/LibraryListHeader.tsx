@@ -1,5 +1,5 @@
 import { RecentlyPlayedCard } from "@/components/RecentlyPlayedCard";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 
 import useHistory from "@/hooks/store/history";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,6 +9,7 @@ import { Modal, Portal } from "react-native-paper";
 import EmptyState from "./EmptyState";
 
 const LibraryListHeader: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const history = useHistory((state) => state.history);
   const clearHistory = useHistory((state) => state.clearHistory);
 
@@ -92,7 +93,7 @@ const LibraryListHeader: React.FC = () => {
 
 export default memo(LibraryListHeader);
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   containerStyle: {
     backgroundColor: AppColors.backgroundCard,
     width: "90%",

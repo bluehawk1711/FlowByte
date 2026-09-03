@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
 import { client } from "@/lib/api";
@@ -34,6 +34,7 @@ const { width } = Dimensions.get("window");
 const ARTWORK_SIZE = width - 64;
 
 export const NowPlayingScreen = () => {
+  const styles = useThemedStyles(createStyles);
   const {
     playlist,
     song,
@@ -464,7 +465,7 @@ export const NowPlayingScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -704,3 +705,5 @@ const styles = StyleSheet.create({
     color: AppColors.textSecondary,
   },
 });
+
+

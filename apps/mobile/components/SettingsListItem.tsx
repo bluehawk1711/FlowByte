@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
@@ -20,7 +20,7 @@ interface SettingsListItemProps {
 export const SettingsListItem: React.FC<SettingsListItemProps> = ({
   icon,
   iconColor = AppColors.textPrimary,
-  iconBgColor = "#2A2A2A",
+  iconBgColor = AppColors.divider,
   label,
   description,
   type = "navigation",
@@ -28,6 +28,7 @@ export const SettingsListItem: React.FC<SettingsListItemProps> = ({
   onPress,
   onValueChange,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const renderRightContent = () => {
     switch (type) {
       case "toggle":
@@ -87,13 +88,13 @@ export const SettingsListItem: React.FC<SettingsListItemProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#1A1A1A",
+    backgroundColor: AppColors.backgroundCard,
     borderRadius: 12,
     marginVertical: 4,
   },

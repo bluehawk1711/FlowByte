@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import useSaved, {
   isYouTubeUrl,
   parseYouTubeUrl,
@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInRight } from "react-native-reanimated";
 
 export const SavedScreen: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const items = useSaved((s) => s.items);
@@ -262,6 +263,7 @@ function SavedItemRow({
   onOpen: () => void;
   onRemove: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
   const thumbnail = item.thumbnail;
 
   return (
@@ -325,7 +327,7 @@ function SavedItemRow({
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -482,3 +484,5 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
+
+

@@ -58,3 +58,4 @@ storage/      # Local dev storage (audio/artwork/lyrics) — gitignored
 - Errors: structured, never swallowed; log context.
 - Shared types live in `packages/types` — never define duplicate `Song` interfaces per app.
 - Naming: kebab-case files, PascalCase components, camelCase functions.
+- Icons (desktop): import every icon from `src/lib/icons.tsx` — never from `lucide-react`/`@animateicons` directly. Animated glyphs preferred; lucide fallback only for glyphs the animated set lacks (see rules.md #21–23). Mobile keeps lucide (animated set is DOM-only).

@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import useAudioContext from "@/hooks/store/audioContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,6 +30,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({
   visible,
   onDismiss,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const {
     song: currentSong,
@@ -308,7 +309,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -459,3 +460,5 @@ const styles = StyleSheet.create({
     padding: 6,
   },
 });
+
+

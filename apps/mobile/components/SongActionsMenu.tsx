@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
@@ -44,6 +44,7 @@ export const SongActionsMenu: React.FC<SongActionsMenuProps> = ({
   song,
   menuIconColor = AppColors.textSecondary,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const [menuVisible, setMenuVisible] = useState(false);
   const [playlistModalVisible, setPlaylistModalVisible] = useState(false);
   const insets = useSafeAreaInsets();
@@ -279,7 +280,7 @@ export const SongActionsMenu: React.FC<SongActionsMenuProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   menuButton: {
     padding: 12,
     zIndex: 10,
@@ -372,3 +373,5 @@ const styles = StyleSheet.create({
     color: AppColors.textSecondary + "60",
   },
 });
+
+

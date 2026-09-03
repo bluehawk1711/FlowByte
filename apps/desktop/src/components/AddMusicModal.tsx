@@ -9,11 +9,12 @@ import {
   Music4,
   Search,
   Upload,
-} from 'lucide-react';
+} from '../lib/icons';
 import { toast } from 'sonner';
 import type { VideoInfo } from '@flowbyte/types';
 import { useDownloads } from '../context/DownloadContext';
-import { formatDuration, parseYouTubeUrl } from '../lib/utils';
+import { cn, formatDuration, parseYouTubeUrl } from '../lib/utils';
+import { getPlaylistItems, type PlaylistItem } from '../lib/tauri';
 import {
   addToSavedPlaylist,
   createSavedPlaylist,
@@ -26,20 +27,16 @@ import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Dialog } from './ui/dialog';
 import { Input } from './ui/input';
+import { Select } from './ui/select';
 import type { DownloadType } from '../lib/tauri';
 
 const DOWNLOAD_OPTIONS: Array<{ type: DownloadType; label: string; hint: string }> = [
   { type: 'audio', label: 'Audio (MP3)', hint: 'Best audio only' },
-  { type: 'video', label: 'Video (best)', hint: 'Best quality merged' },
-  { type: 'merged', label: 'Video (720p)', hint: '≤720p merged MP4' },
-  { type: 'fast', label: 'Video (360p)', hint: 'Fast, small file' },
-  { type: 'video-only', label: 'Video only', hint: 'No audio track' },
-  { type: 'playlist', label: 'Playlist (audio)', hint: 'MP3 for every item' },
-  { type: 'playlistVideo', label: 'Playlist (video)', hint: 'Merged videos' },
+  { type: 'playlist', label: 'Playlist (audio)', hint: 'Import all items to library' },
 ];
 
 export function AddMusicModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { analyze, startDownload, importToLibrary } = useDownloads();
+  const { analyze, startDownload, importToLibrary, importPlaylistToLibrary } = useDownloads();
   const [url, setUrl] = useState('');
   const [info, setInfo] = useState<VideoInfo | null>(null);
   const [busy, setBusy] = useState(false);
@@ -47,6 +44,9 @@ export function AddMusicModal({ open, onClose }: { open: boolean; onClose: () =>
   const [importing, setImporting] = useState(false);
   const [playlistId, setPlaylistId] = useState<string>('');
   const [newPlaylistName, setNewPlaylistName] = useState('');
+  // For YouTube playlist URLs: save just the first video or every item.
+  const [saveMode, setSaveMode] = useState<'first' | 'all'>('first');
+  const [plItems, setPlItems] = useState<PlaylistItem[] | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,10 +64,21 @@ export function AddMusicModal({ open, onClose }: { open: boolean; onClose: () =>
         setInfo(result);
         if (result.success === false) {
           setError(result.message ?? 'Could not read video info');
+        } else {
+          // Playlist URL → prefetch its items so "Save all" can offer a count.
+          const p = parseYouTubeUrl(value);
+          setSaveMode(p?.isPlaylist ? 'all' : 'first');
+          setPlItems(null);
+          if (p?.isPlaylist) {
+            void getPlaylistItems(value)
+              .then((pl) => setPlItems(pl.items))
+              .catch(() => setPlItems(null));
+          }
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Analysis failed');
         setInfo(null);
+        setPlItems(null);
       } finally {
         setBusy(false);
       }
@@ -80,8 +91,13 @@ export function AddMusicModal({ open, onClose }: { open: boolean; onClose: () =>
     setBusy(true);
     setError(null);
     try {
-      await startDownload(url, type);
-      toast.success('Download started — see the Downloads page');
+      if (type === 'playlist') {
+        await importPlaylistToLibrary(url);
+        toast.success('Playlist import started — see the Downloads page');
+      } else {
+        await startDownload(url, type);
+        toast.success('Download started — see the Downloads page');
+      }
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Download failed to start');
@@ -105,34 +121,55 @@ export function AddMusicModal({ open, onClose }: { open: boolean; onClose: () =>
     }
   };
 
-  const onSaveToPlaylist = () => {
+  const onSaveToPlaylist = async () => {
     if (!url || !info?.success || !parsed) return;
+
+    let target: { id: string; name: string } | null = null;
     if (newPlaylistName.trim()) {
       const created = createSavedPlaylist(newPlaylistName);
-      addToSavedPlaylist(created.id, {
-        url,
-        videoId: parsed.videoId,
-        playlistId: parsed.playlistId,
-        title: info.title,
-        thumbnail: info.thumbnail ?? null,
-        isPlaylist: parsed.isPlaylist,
-      });
       setNewPlaylistName('');
       setPlaylistId('');
-      toast.success(`Saved to new playlist "${created.name}"`);
+      target = created;
     } else if (playlistId) {
-      addToSavedPlaylist(playlistId, {
-        url,
-        videoId: parsed.videoId,
-        playlistId: parsed.playlistId,
-        title: info.title,
-        thumbnail: info.thumbnail ?? null,
-        isPlaylist: parsed.isPlaylist,
-      });
-      toast.success('Saved to playlist');
-    } else {
-      toast.error('Pick a playlist or enter a name for a new one');
+      const existing = getSavedPlaylists().find((p) => p.id === playlistId);
+      if (existing) target = existing;
     }
+    if (!target) {
+      toast.error('Pick a playlist or enter a name for a new one');
+      return;
+    }
+
+    // Behaviour A: add every item of a YouTube playlist.
+    if (parsed.isPlaylist && saveMode === 'all') {
+      const items = plItems;
+      if (!items || items.length === 0) {
+        toast.error('No playlist items to save');
+        return;
+      }
+      items.forEach((it) => {
+        addToSavedPlaylist(target!.id, {
+          url: it.url,
+          videoId: it.videoId,
+          playlistId: null,
+          title: it.title,
+          thumbnail: it.thumbnail ?? info.thumbnail ?? null,
+          isPlaylist: false,
+        });
+      });
+      toast.success(`Saved ${items.length} items to "${target.name}"`);
+      return;
+    }
+
+    // Behaviour B: save just the analyzed video/entry.
+    addToSavedPlaylist(target.id, {
+      url,
+      videoId: parsed.videoId,
+      playlistId: parsed.playlistId,
+      title: info.title,
+      thumbnail: info.thumbnail ?? null,
+      isPlaylist: parsed.isPlaylist,
+    });
+    toast.success(`Saved to "${target.name}"`);
   };
 
   const close = () => {
@@ -311,11 +348,43 @@ export function AddMusicModal({ open, onClose }: { open: boolean; onClose: () =>
                 <ListPlus className="h-4 w-4" />
                 Save to playlist (play later)
               </div>
+
+              {/* Playlist URL → choose what to save */}
+              {parsed?.isPlaylist && (
+                <div className="flex gap-1 rounded-lg border border-line bg-app p-1">
+                  <button
+                    type="button"
+                    onClick={() => setSaveMode('first')}
+                    className={cn(
+                      'flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150',
+                      saveMode === 'first'
+                        ? 'bg-card text-ink-1 shadow-elev-1'
+                        : 'text-ink-3 hover:text-ink-1',
+                    )}
+                  >
+                    First video only
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSaveMode('all')}
+                    className={cn(
+                      'flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150',
+                      saveMode === 'all'
+                        ? 'bg-card text-ink-1 shadow-elev-1'
+                        : 'text-ink-3 hover:text-ink-1',
+                    )}
+                  >
+                    All {plItems ? `${plItems.length} items` : 'playlist items'}
+                  </button>
+                </div>
+              )}
+
               <div className="flex flex-wrap items-center gap-2">
-                <select
+                <Select
+                  aria-label="Save to existing playlist"
+                  wrapperClassName="min-w-44 flex-1"
                   value={playlistId}
                   onChange={(e) => setPlaylistId(e.target.value)}
-                  className="h-9 rounded-md border border-line-strong bg-app px-2 text-sm text-ink-1"
                 >
                   <option value="">Existing playlist…</option>
                   {getSavedPlaylists().map((p) => (
@@ -323,14 +392,21 @@ export function AddMusicModal({ open, onClose }: { open: boolean; onClose: () =>
                       {p.name} ({p.items.length})
                     </option>
                   ))}
-                </select>
+                </Select>
                 <Input
                   className="w-44"
                   placeholder="…or new playlist name"
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
                 />
-                <Button variant="outline" onClick={onSaveToPlaylist}>
+                <Button
+                  variant="outline"
+                  onClick={() => void onSaveToPlaylist()}
+                  disabled={
+                    saveMode === 'all' && parsed?.isPlaylist === true && plItems === null
+                  }
+                >
+                  <ListPlus className="h-4 w-4" />
                   Save
                 </Button>
               </div>

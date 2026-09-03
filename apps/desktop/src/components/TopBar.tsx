@@ -1,4 +1,4 @@
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search } from '../lib/icons';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -8,7 +8,7 @@ export function TopBar({
   onAddMusic,
   searchInputRef,
 }: {
-  onNavigate: (p: 'home' | 'search' | 'settings') => void;
+  onNavigate: (p: 'home' | 'search' | 'settings' | 'profile') => void;
   onAddMusic: () => void;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
 }) {
@@ -43,9 +43,9 @@ export function TopBar({
       </Button>
 
       <button
-        onClick={() => onNavigate('settings')}
+        onClick={() => onNavigate('profile')}
         className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-fg transition-transform duration-150 hover:scale-105 active:scale-95"
-        aria-label="Account"
+        aria-label="Open profile"
         title={user?.username ?? user?.email}
       >
         {initial}

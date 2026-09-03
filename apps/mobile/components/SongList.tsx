@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
@@ -35,6 +35,7 @@ const SongList: React.FC<SongListProps> = ({
   isLoading = false,
   contentContainerStyle,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const currentSong = useAudioContext((state) => state.song);
   const isPlaying = useAudioContext((state) => state.isPlaying);
@@ -228,7 +229,7 @@ const SongList: React.FC<SongListProps> = ({
 
 export default SongList;
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -276,3 +277,5 @@ const styles = StyleSheet.create({
     marginTop: 50,
   },
 });
+
+

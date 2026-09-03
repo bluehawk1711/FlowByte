@@ -1,20 +1,20 @@
-import { AppColors, Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { AppColors, useAppTheme } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  // Subscribe so the tab chrome repaints when accent/background mode changes.
+  useAppTheme();
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: AppColors.accentCyan,
-        tabBarInactiveTintColor: Colors[colorScheme ?? "dark"].tabIconDefault,
+        tabBarInactiveTintColor: AppColors.iconDefault,
         tabBarStyle: {
-          backgroundColor:  "#0A0A0A",
-          borderTopColor:  "#1A1A1A",
+          backgroundColor: AppColors.backgroundDark,
+          borderTopColor: AppColors.divider,
           // paddingTop: 8,
           // height: 70,
         },

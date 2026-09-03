@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
@@ -13,6 +13,7 @@ const FolderListItemComponent: React.FC<FolderListItemProps> = ({
   id,
   name,
 }) => {
+  const styles = useThemedStyles(createStyles);
   return (
     <Pressable
       style={styles.container}
@@ -31,7 +32,7 @@ const FolderListItemComponent: React.FC<FolderListItemProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
@@ -41,7 +42,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 44,
     height: 44,
-    backgroundColor: "#2A2A2A",
+    backgroundColor: AppColors.backgroundCard,
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",

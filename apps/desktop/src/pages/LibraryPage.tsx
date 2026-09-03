@@ -1,5 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Album, Disc3, Heart, ListMusic, Mic2, Music4, Play, Search, SearchX } from 'lucide-react';
+import {
+  Album,
+  Check,
+  Disc3,
+  Heart,
+  ListMusic,
+  Mic2,
+  Music4,
+  Play,
+  Search,
+  SearchX,
+  X,
+} from '../lib/icons';
+import DynamicIsland from '../components/ui/smoothui/dynamic-island';
+import GlowHover from '../components/ui/smoothui/glow-hover-card';
+import GooeyPopover from '../components/ui/smoothui/gooey-popover';
+import { toast } from 'sonner';
 import type { Album as AlbumT, Artist, Playlist, Song } from '@flowbyte/types';
 import { client } from '../lib/api';
 import { usePlayer } from '../context/PlayerContext';
@@ -8,6 +24,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { SongRow } from '../components/SongRow';
 import { SongContextMenu, type SongContextMenuState } from '../components/SongContextMenu';
+import { ArtistDialog } from '../components/ArtistDialog';
 import { EmptyState } from '../components/ui/feedback';
 import { Skeleton } from '../components/ui/skeleton';
 import { cn } from '../lib/utils';
@@ -34,6 +51,9 @@ export function LibraryPage() {
   const [favorites, setFavorites] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [ctxMenu, setCtxMenu] = useState<SongContextMenuState | null>(null);
+  const [artist, setArtist] = useState<Artist | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const load = useCallback(async (q: string) => {
     setLoading(true);
@@ -88,6 +108,83 @@ export function LibraryPage() {
 
   const songCount = songs.length;
   const filteredSongs = tab === 'favorites' ? favorites : songs;
+  const selectedSongs = filteredSongs.filter((s) => selected.has(s.id));
+
+  // -------------------------------------------------------------------------
+  // Multi-select (dynamic island) helpers
+  // -------------------------------------------------------------------------
+  const toggleSelect = useCallback(
+    (song: Song) => {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(song.id)) next.delete(song.id);
+        else next.add(song.id);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const selectAllVisible = useCallback(() => {
+    setSelected(new Set(filteredSongs.map((s) => s.id)));
+  }, [filteredSongs]);
+
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelected(new Set());
+  }, []);
+
+  const playSelected = useCallback(() => {
+    const list = selectedSongs;
+    if (list.length > 0) {
+      playQueue(list, 0);
+      exitSelectMode();
+    }
+  }, [selectedSongs, playQueue, exitSelectMode]);
+
+  const favoriteSelected = useCallback(async () => {
+    const ids = selectedSongs.map((s) => s.id);
+    if (ids.length === 0) return;
+    try {
+      // One batched request (POST /favorites/batch) — N parallel calls could
+      // partially fail under burst/rate limits.
+      const { added } = await client.addFavorites(ids);
+      if (added > 0) {
+        toast.success('Added to favorites', {
+          description: `${added} ${added === 1 ? 'song' : 'songs'}`,
+        });
+      } else {
+        toast.message('Already in favorites');
+      }
+      void load(query);
+    } catch {
+      toast.error('Could not update favorites');
+    }
+  }, [selectedSongs, load, query]);
+
+  const playArtistTop = useCallback(
+    async (a: Artist) => {
+      try {
+        const res = await client.getArtist(a.id);
+        if (res.songs.length > 0) {
+          playQueue(res.songs, 0);
+          exitSelectMode();
+        } else {
+          toast.message('No songs yet for this artist');
+        }
+      } catch {
+        toast.error('Could not load this artist');
+      }
+    },
+    [playQueue, exitSelectMode],
+  );
+
+  const accentHue = (seed: string) => {
+    let h = 0;
+    for (let i = 0; i < seed.length; i += 1) h = (h * 31 + seed.charCodeAt(i)) % 360;
+    return { hue: h, saturation: 78, lightness: 58 };
+  };
+
   const showArtists = tab === 'all' || tab === 'artists';
   const showAlbums = tab === 'all' || tab === 'albums';
   const showPlaylists = tab === 'playlists';
@@ -116,6 +213,38 @@ export function LibraryPage() {
               aria-label="Filter library"
             />
           </div>
+          {selectMode ? (
+            <>
+              <span className="shrink-0 text-sm text-ink-2">
+                {selected.size} selected
+              </span>
+              <Button variant="ghost" size="sm" onClick={selectAllVisible}>
+                Select all
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={exitSelectMode}
+                aria-label="Exit selection"
+              >
+                <X className="h-3.5 w-3.5" />
+                Done
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={songCount === 0}
+              onClick={() => {
+                setSelected(new Set());
+                setSelectMode(true);
+              }}
+            >
+              <Check className="h-3.5 w-3.5" />
+              Select
+            </Button>
+          )}
           <Button variant="secondary" onClick={playAll} disabled={songs.length === 0}>
             <Play className="h-4 w-4" />
             Play all
@@ -133,7 +262,10 @@ export function LibraryPage() {
                 ? 'bg-ink-1 text-app'
                 : 'text-ink-2 hover:bg-white/8 hover:text-ink-1',
             )}
-            onClick={() => setTab(id)}
+            onClick={() => {
+              exitSelectMode();
+              setTab(id);
+            }}
             aria-pressed={tab === id}
           >
             <Icon className="h-4 w-4" />
@@ -166,7 +298,20 @@ export function LibraryPage() {
                 </p>
                 <div className="space-y-0.5">
                   {filteredSongs.map((s, i) => (
-                    <SongRow key={s.id} song={s} queue={filteredSongs} index={i} onContextMenu={(song, pos) => setCtxMenu({ song, position: pos })} />
+                    <SongRow
+                      key={s.id}
+                      song={s}
+                      queue={filteredSongs}
+                      index={i}
+                      onContextMenu={
+                        selectMode
+                          ? undefined
+                          : (song, pos) => setCtxMenu({ song, position: pos })
+                      }
+                      selectable={selectMode}
+                      selected={selected.has(s.id)}
+                      onToggleSelect={toggleSelect}
+                    />
                   ))}
                 </div>
               </div>
@@ -177,27 +322,69 @@ export function LibraryPage() {
                 <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-3">
                   Artists
                 </p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                  {artists.map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex flex-col items-center rounded-lg p-3 text-center transition-colors duration-150 hover:bg-white/8"
-                    >
-                      {a.artworkUrl ? (
-                        <img
-                          src={a.artworkUrl}
-                          alt=""
-                          className="h-20 w-20 rounded-full object-cover shadow-elev-1"
-                        />
-                      ) : (
-                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-card text-xl font-semibold text-ink-2">
-                          {a.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <p className="mt-2 truncate text-sm font-medium text-ink-1">{a.name}</p>
-                    </div>
-                  ))}
-                </div>
+                <GlowHover
+                  className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+                  items={artists.map((a) => ({
+                    id: a.id,
+                    theme: accentHue(a.id),
+                    element: (
+                      <div className="flex flex-col items-center rounded-lg p-3 text-center transition-colors duration-150 hover:bg-white/8">
+                        <GooeyPopover
+                          triggerSize={80}
+                          side="bottom"
+                          contentWidth={220}
+                          bgClassName="bg-elevated"
+                          contentClassName="text-ink-1"
+                          trigger={
+                            <div className="flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full shadow-elev-1">
+                              {a.artworkUrl ? (
+                                <img
+                                  src={a.artworkUrl}
+                                  alt=""
+                                  loading="lazy"
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-card text-xl font-semibold text-ink-2">
+                                  {a.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                          }
+                        >
+                          <div className="space-y-0.5 py-1.5">
+                            <p className="truncate px-3 pb-1 text-sm font-semibold">
+                              {a.name}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setArtist(a)}
+                              className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors hover:bg-white/8"
+                            >
+                              <Mic2 className="h-4 w-4 text-ink-3" />
+                              Open artist
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void playArtistTop(a)}
+                              className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors hover:bg-white/8"
+                            >
+                              <Play className="h-4 w-4 text-ink-3" />
+                              Play top songs
+                            </button>
+                          </div>
+                        </GooeyPopover>
+                        <button
+                          type="button"
+                          onClick={() => setArtist(a)}
+                          className="mt-2 w-full truncate text-sm font-medium text-ink-1 transition-colors hover:text-accent-hover"
+                        >
+                          {a.name}
+                        </button>
+                      </div>
+                    ),
+                  }))}
+                />
               </div>
             )}
 
@@ -206,33 +393,37 @@ export function LibraryPage() {
                 <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-3">
                   Albums
                 </p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                  {albums.map((al) => (
-                    <button
-                      key={al.id}
-                      onClick={() => playAlbum(al)}
-                      className="group flex flex-col rounded-lg p-3 text-left transition-colors duration-150 hover:bg-white/8"
-                    >
-                      {al.artworkUrl ? (
-                        <img
-                          src={al.artworkUrl}
-                          alt=""
-                          loading="lazy"
-                          className="aspect-square w-full rounded-md object-cover shadow-elev-1"
-                        />
-                      ) : (
-                        <div className="flex aspect-square w-full items-center justify-center rounded-md bg-card">
-                          <Album className="h-8 w-8 text-ink-3" />
-                        </div>
-                      )}
-                      <p className="mt-2 truncate text-sm font-medium text-ink-1">{al.name}</p>
-                      <p className="truncate text-xs text-ink-2">
-                        {al.artistName ?? ''}
-                        {al.releaseYear ? ` · ${al.releaseYear}` : ''}
-                      </p>
-                    </button>
-                  ))}
-                </div>
+                <GlowHover
+                  className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+                  items={albums.map((al) => ({
+                    id: al.id,
+                    theme: accentHue(al.id),
+                    element: (
+                      <button
+                        onClick={() => playAlbum(al)}
+                        className="group flex flex-col rounded-lg p-3 text-left transition-colors duration-150 hover:bg-white/8"
+                      >
+                        {al.artworkUrl ? (
+                          <img
+                            src={al.artworkUrl}
+                            alt=""
+                            loading="lazy"
+                            className="aspect-square w-full rounded-md object-cover shadow-elev-1"
+                          />
+                        ) : (
+                          <div className="flex aspect-square w-full items-center justify-center rounded-md bg-card">
+                            <Album className="h-8 w-8 text-ink-3" />
+                          </div>
+                        )}
+                        <p className="mt-2 truncate text-sm font-medium text-ink-1">{al.name}</p>
+                        <p className="truncate text-xs text-ink-2">
+                          {al.artistName ?? ''}
+                          {al.releaseYear ? ` · ${al.releaseYear}` : ''}
+                        </p>
+                      </button>
+                    ),
+                  }))}
+                />
               </div>
             )}
 
@@ -257,6 +448,60 @@ export function LibraryPage() {
         )}
       </div>
       <SongContextMenu state={ctxMenu} onClose={() => setCtxMenu(null)} />
+      <ArtistDialog artist={artist} onClose={() => setArtist(null)} />
+
+      {/* Dynamic island — multi-select actions (floats above the player) */}
+      {selectMode && (
+        <div className="pointer-events-none fixed bottom-24 left-1/2 z-[120] -translate-x-1/2">
+          <DynamicIsland
+            showControls={false}
+            view={selected.size > 0 ? 'ring' : 'idle'}
+            className="pointer-events-none"
+            idleContent={
+              <div className="pointer-events-auto flex items-center gap-2 px-4 py-2 text-sm text-white/80">
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-white/15">
+                  <Check className="h-3 w-3" />
+                </span>
+                Tap songs to select, then act from here
+              </div>
+            }
+            ringContent={
+              <div className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-white">
+                <span className="min-w-0 px-2 text-sm font-semibold">
+                  {selected.size} selected
+                </span>
+                <button
+                  type="button"
+                  title="Play selection"
+                  aria-label="Play selection"
+                  onClick={playSelected}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
+                >
+                  <Play className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Add to favorites"
+                  aria-label="Add to favorites"
+                  onClick={() => void favoriteSelected()}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
+                >
+                  <Heart className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Clear selection"
+                  aria-label="Clear selection"
+                  onClick={() => setSelected(new Set())}
+                  className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            }
+          />
+        </div>
+      )}
     </div>
   );
 }

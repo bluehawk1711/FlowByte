@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import usePlaylist from "@/hooks/store/playlist";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -9,6 +9,7 @@ import { MiniPlayer } from "../MiniPlayer";
 import SongList from "../SongList";
 
 export const PlaylistDetailScreen: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams();
@@ -49,7 +50,7 @@ export const PlaylistDetailScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -98,3 +99,5 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+

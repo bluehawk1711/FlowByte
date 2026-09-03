@@ -1,6 +1,6 @@
 import { FolderListItem } from "@/components/FolderListItem";
 import { MiniPlayer } from "@/components/MiniPlayer";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { FlashList } from "@shopify/flash-list";
 import {
   Album,
@@ -21,6 +21,7 @@ const getPermission = async () => {
 };
 
 export const StorageScreen: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const [folders, setFolders] = useState<Album[]>([]);
 
@@ -65,7 +66,7 @@ export const StorageScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -117,3 +118,5 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+

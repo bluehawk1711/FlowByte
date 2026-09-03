@@ -167,43 +167,34 @@ pub async fn start_download(
     let mut progress = DownloadProgress::new("preparing");
 
     let args: Vec<String> = match download_type.as_str() {
-        "playlist" | "playlistVideo" => {
+        "playlist" => {
             progress.detail = "Fetching playlist info...".into();
             broadcast_progress(&app, &id, &progress).await;
             let folder = downloads_dir.join(get_playlist_name(&app, &url).await);
             std::fs::create_dir_all(&folder).map_err(|e| format!("create playlist folder: {e}"))?;
             let template = folder.join("%(playlist_index)s - %(title)s.%(ext)s");
             let template_str = template.to_string_lossy().to_string();
-            let mut args = vec![
+            vec![
                 "-f".to_string(),
-                if download_type == "playlist" {
-                    "bestaudio/best".into()
-                } else {
-                    "bestvideo+bestaudio/best".into()
-                },
+                "bestaudio/best".into(),
                 "-o".into(),
                 template_str,
                 "--no-part".into(),
                 "--no-cache-dir".into(),
                 "--no-warnings".into(),
-            ];
-            if download_type == "playlist" {
-                args.extend([
-                    "-x".into(),
-                    "--audio-format".into(),
-                    "mp3".into(),
-                    "--extractor-retries".into(),
-                    "3".into(),
-                    "--ignore-errors".into(),
-                    "--yes-playlist".into(),
-                ]);
-            } else {
-                args.extend(["-N".into(), "8".into(), "--merge-output-format".into(), "mp4".into()]);
-            }
-            args.extend(["--ffmpeg-location".into(), ffmpeg_str.clone(), url]);
-            args
+                "-x".into(),
+                "--audio-format".into(),
+                "mp3".into(),
+                "--extractor-retries".into(),
+                "3".into(),
+                "--ignore-errors".into(),
+                "--yes-playlist".into(),
+                "--ffmpeg-location".into(),
+                ffmpeg_str,
+                url,
+            ]
         }
-        "audio" => vec![
+        _ => vec![
             "-f".into(),
             "bestaudio".into(),
             "-x".into(),
@@ -213,62 +204,6 @@ pub async fn start_download(
             downloads_dir.join("%(title)s.%(ext)s").to_string_lossy().to_string(),
             "--ffmpeg-location".into(),
             ffmpeg_str,
-            url,
-        ],
-        "video-only" => vec![
-            "-f".into(),
-            "bestvideo".into(),
-            "--no-part".into(),
-            "--no-cache-dir".into(),
-            "-N".into(),
-            "8".into(),
-            "-o".into(),
-            downloads_dir.join("%(title)s_video_only.%(ext)s").to_string_lossy().to_string(),
-            url,
-        ],
-        "merged" => vec![
-            "-f".into(),
-            "bestvideo[height<=720]+bestaudio/best[height<=720]/best".into(),
-            "--merge-output-format".into(),
-            "mp4".into(),
-            "--no-part".into(),
-            "--no-cache-dir".into(),
-            "-N".into(),
-            "8".into(),
-            "--ffmpeg-location".into(),
-            ffmpeg_str,
-            "-o".into(),
-            downloads_dir.join("%(title)s_medium.%(ext)s").to_string_lossy().to_string(),
-            url,
-        ],
-        "fast" => vec![
-            "-f".into(),
-            "bestvideo[height<=360]+bestaudio/best[height<=360]/best".into(),
-            "--merge-output-format".into(),
-            "mp4".into(),
-            "--no-part".into(),
-            "--no-cache-dir".into(),
-            "-N".into(),
-            "8".into(),
-            "--ffmpeg-location".into(),
-            ffmpeg_str,
-            "-o".into(),
-            downloads_dir.join("%(title)s_low.%(ext)s").to_string_lossy().to_string(),
-            url,
-        ],
-        _ => vec![
-            "-f".into(),
-            "bestvideo+bestaudio/best".into(),
-            "--merge-output-format".into(),
-            "mp4".into(),
-            "--no-part".into(),
-            "--no-cache-dir".into(),
-            "-N".into(),
-            "8".into(),
-            "--ffmpeg-location".into(),
-            ffmpeg_str,
-            "-o".into(),
-            downloads_dir.join("%(title)s_video.%(ext)s").to_string_lossy().to_string(),
             url,
         ],
     };

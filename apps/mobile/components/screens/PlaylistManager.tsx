@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import usePlaylist from "@/hooks/store/playlist";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -26,6 +26,7 @@ import { MiniPlayer } from "../MiniPlayer";
 // }
 
 export const PlaylistManager = () => {
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const playlists = usePlaylist((state) => state.playlists);
@@ -182,7 +183,7 @@ export const PlaylistManager = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -303,3 +304,5 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+

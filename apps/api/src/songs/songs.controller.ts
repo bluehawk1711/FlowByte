@@ -1,7 +1,16 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SongsService } from './songs.service';
 import { ListSongsQuery } from './dto/list-songs.dto';
+import { UpdateSongDto } from './dto/update-song.dto';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator';
 import type { Paginated, Song, SongWithLyrics } from '@flowbyte/types';
 
@@ -21,6 +30,16 @@ export class SongsController {
   @ApiOperation({ summary: 'Get a single song' })
   findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Song> {
     return this.songsService.findById(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update song metadata (title, artist, album, genre, year)' })
+  update(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSongDto,
+  ): Promise<Song> {
+    return this.songsService.update(user.id, id, dto);
   }
 
   @Get(':id/lyrics')

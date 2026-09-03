@@ -12,11 +12,12 @@ import {
   SkipBack,
   SkipForward,
   X,
-} from 'lucide-react';
+} from '../lib/icons';
 import type { NormalizedLyrics } from '@flowbyte/types';
 import { client } from '../lib/api';
 import { usePlayer } from '../context/PlayerContext';
 import { cn, formatDuration } from '../lib/utils';
+import RevealText from './ui/smoothui/reveal-text';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
 import { Spinner } from './ui/spinner';
@@ -178,13 +179,22 @@ export function ExpandedPlayer({ open, onClose }: ExpandedPlayerProps) {
             )}
           </div>
 
-          {/* Song info + favorite */}
+          {/* Song info + favorite — RevealText animates the jump from the
+              small NowPlaying bar into the full-screen view */}
           <div className="mt-6 flex w-full items-center gap-3">
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-xl font-bold text-ink-1">{current.title}</h2>
-              <p className="truncate text-sm text-ink-2">
+              <RevealText
+                className="max-w-full truncate text-xl font-bold text-ink-1"
+                delay={40}
+              >
+                {current.title}
+              </RevealText>
+              <RevealText
+                className="mt-0.5 max-w-full truncate text-sm text-ink-2"
+                delay={140}
+              >
                 {current.artistName ?? 'Unknown artist'}
-              </p>
+              </RevealText>
             </div>
             <Button
               variant="ghost"

@@ -1,5 +1,5 @@
 import { MiniPlayer } from "@/components/MiniPlayer";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import useSaved, { isYouTubeUrl, parseYouTubeUrl } from "@/lib/saved";
 import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const AddMusicScreen: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const addItem = useSaved((s) => s.addItem);
@@ -210,7 +211,7 @@ export const AddMusicScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -369,3 +370,5 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+

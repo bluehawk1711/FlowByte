@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -23,6 +23,7 @@ export const ColorChooser: React.FC<ColorChooserProps> = ({
   selectedColor,
   onSelectColor,
 }) => {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Select Accent Color</Text>
@@ -51,10 +52,10 @@ export const ColorChooser: React.FC<ColorChooserProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: "#1A1A1A",
+    backgroundColor: AppColors.backgroundCard,
     borderRadius: 16,
   },
   title: {

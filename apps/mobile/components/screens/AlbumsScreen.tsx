@@ -1,5 +1,5 @@
 import { MiniPlayer } from "@/components/MiniPlayer";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import useAudioContext from "@/hooks/store/audioContext";
 import { client } from "@/lib/api";
 import { toMobileSong } from "@/lib/sync";
@@ -31,6 +31,7 @@ interface Album {
 }
 
 export const AlbumsScreen: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { playList } = useAudioContext();
@@ -148,7 +149,7 @@ export const AlbumsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -235,3 +236,5 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+

@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -12,6 +12,7 @@ interface RecentlyPlayedCardProps {
 const RecentlyPlayedCardComponent: React.FC<RecentlyPlayedCardProps> = ({
   song,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const setSong = useAudioContext((state) => state.setSong);
 
   return (
@@ -33,7 +34,7 @@ const RecentlyPlayedCardComponent: React.FC<RecentlyPlayedCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     width: 140,
     marginRight: 12,
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   placeholder: {
-    backgroundColor: "#2A2A2A",
+    backgroundColor: AppColors.backgroundCard,
     justifyContent: "center",
     alignItems: "center",
   },

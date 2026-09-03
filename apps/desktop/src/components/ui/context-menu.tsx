@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import { ChevronRight } from 'lucide-react';
+import type { IconComponent } from '../../lib/icons';
+import { ChevronRight } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 export interface ContextMenuItem {
   label: string;
-  icon?: LucideIcon;
+  icon?: IconComponent;
   onClick?: () => void;
   danger?: boolean;
   disabled?: boolean;
@@ -20,10 +20,13 @@ interface ContextMenuProps {
   onClose: () => void;
 }
 
+const EDGE_PAD = 8;
+
 export function ContextMenu({ items, position, onClose }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [focusIndex, setFocusIndex] = useState(-1);
   const [openSub, setOpenSub] = useState<number | null>(null);
+  const [subAlign, setSubAlign] = useState<{ flip: boolean; up: boolean; cap?: number } | null>(null);
 
   // Filter out separator-only items for indexing
   const navigable = items.map((item, i) => ({ item, i })).filter(({ item }) => !item.separator);
@@ -33,14 +36,56 @@ export function ContextMenu({ items, position, onClose }: ContextMenuProps) {
     if (!position || !menuRef.current) return;
     const el = menuRef.current;
     const rect = el.getBoundingClientRect();
-    const pad = 8;
-    if (rect.right > window.innerWidth - pad) {
-      el.style.left = `${Math.max(pad, position.x - rect.width)}px`;
+    if (rect.right > window.innerWidth - EDGE_PAD) {
+      el.style.left = `${Math.max(EDGE_PAD, position.x - rect.width)}px`;
     }
-    if (rect.bottom > window.innerHeight - pad) {
-      el.style.top = `${Math.max(pad, position.y - rect.height)}px`;
+    if (rect.bottom > window.innerHeight - EDGE_PAD) {
+      el.style.top = `${Math.max(EDGE_PAD, position.y - rect.height)}px`;
     }
   }, [position]);
+
+  // Flip / lift the submenu so it never leaves the viewport.
+  useEffect(() => {
+    if (openSub === null) {
+      setSubAlign(null);
+      return;
+    }
+    // Give React a tick to mount the newly opened submenu, then measure it.
+    const raf = requestAnimationFrame(() => {
+      const sub = menuRef.current?.querySelector<HTMLElement>('[data-submenu="open"]');
+      if (!sub) return;
+      const r = sub.getBoundingClientRect();
+      const height = r.height;
+      const flip = r.right > window.innerWidth - EDGE_PAD;
+      // Keep the submenu fully on screen: lift it up when it would run past
+      // the bottom, and clamp its height to the space actually available so
+      // no entry is left half-visible below the fold.
+      let up = false;
+      let cap: number | undefined;
+      const below = window.innerHeight - EDGE_PAD - r.top;
+      const above = r.top - EDGE_PAD;
+      if (r.bottom > window.innerHeight - EDGE_PAD) {
+        // Prefer opening upward when there's more (or equal) headroom above;
+        // otherwise stay anchored down but scroll internally to the space we
+        // have. Either way nothing is silently cut off.
+        if (above >= below || above >= height) {
+          up = true;
+          cap = Math.min(height, Math.max(150, above));
+        } else {
+          cap = Math.min(height, Math.max(150, below));
+        }
+      }
+      setSubAlign((prev) =>
+        prev &&
+        prev.flip === flip &&
+        prev.up === up &&
+        prev.cap === cap
+          ? prev
+          : { flip, up, cap },
+      );
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [openSub]);
 
   // Click outside
   useEffect(() => {
@@ -65,6 +110,19 @@ export function ContextMenu({ items, position, onClose }: ContextMenuProps) {
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
+  }, [position, onClose]);
+
+  // Closing on scroll/resize keeps a positioned menu glued to the row that
+  // opened it — it can't stay floating while the list moves underneath.
+  useEffect(() => {
+    if (!position) return;
+    const close = () => onClose();
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
   }, [position, onClose]);
 
   const handleKeyDown = useCallback(
@@ -145,6 +203,7 @@ export function ContextMenu({ items, position, onClose }: ContextMenuProps) {
         const navIdx = navigable.findIndex((n) => n.i === i);
         const isActive = navIdx === focusIndex;
         const Icon = item.icon;
+        const subOpen = item.subItems && openSub === navIdx;
 
         return (
           <div key={i} className="relative">
@@ -168,7 +227,7 @@ export function ContextMenu({ items, position, onClose }: ContextMenuProps) {
               onClick={() => {
                 if (item.disabled) return;
                 if (item.subItems) {
-                  setOpenSub(openSub === navIdx ? null : navIdx);
+                  setOpenSub(subOpen ? null : navIdx);
                 } else {
                   item.onClick?.();
                   onClose();
@@ -182,13 +241,20 @@ export function ContextMenu({ items, position, onClose }: ContextMenuProps) {
               )}
             </button>
 
-            {/* Submenu */}
-            {item.subItems && openSub === navIdx && (
+            {/* Submenu — flips left / lifts up when it would overflow the screen */}
+            {item.subItems && subOpen && (
               <div
+                data-submenu="open"
                 role="menu"
                 className={cn(
-                  'absolute left-full top-0 -mt-1.5 min-w-[180px] rounded-lg border border-line bg-elevated py-1.5 shadow-elev-3',
+                  'absolute top-0 z-10 -mt-1 max-h-[min(60vh,360px)] min-w-[180px] max-w-[280px] overflow-y-auto overflow-x-hidden rounded-lg border border-line bg-elevated py-1.5 shadow-elev-3',
+                  subAlign?.flip ? 'left-auto right-full' : 'left-full',
                 )}
+                style={{
+                  width: 'max-content',
+                  maxHeight: subAlign?.cap,
+                  transform: subAlign?.up ? 'translateY(-100%)' : undefined,
+                }}
               >
                 {item.subItems.map((sub, si) => (
                   <button

@@ -8,6 +8,8 @@ import type { ListSongsQuery } from './dto/list-songs.dto';
 import type { NormalizedLyrics, Paginated, Song, SongWithLyrics } from '@flowbyte/types';
 import { STREAM_TOKEN_TTL_SECONDS } from '@flowbyte/config';
 import { CacheService } from '../cache/cache.service';
+import { RealtimeService } from '../realtime/realtime.service';
+import type { UpdateSongDto } from './dto/update-song.dto';
 
 interface SongWithNames {
   song: (typeof songs)['$inferSelect'];
@@ -29,6 +31,7 @@ export class SongsService {
     @Inject(DATABASE) private readonly db: Database,
     @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
     private readonly cache: CacheService,
+    private readonly realtime: RealtimeService,
   ) {}
 
   /** Enrich artwork keys into short-lived signed URLs (cached per key, 1h TTL). */
@@ -161,6 +164,85 @@ export class SongsService {
       .where(eq(songs.albumId, albumId))
       .orderBy(asc(songs.trackNumber), asc(songs.title));
     return this.enrich(rows, new Set());
+  }
+
+  /**
+   * Patch editable song metadata (title/artist/album/genre/year).
+   * Artist + album are resolved by name (created on first use so a typo fix
+   * re-links rather than orphaning the row), caches are invalidated and an SSE
+   * library-changed event keeps every client list in sync.
+   */
+  async update(userId: string, id: string, dto: UpdateSongDto): Promise<Song> {
+    const [row] = await this.db
+      .select({ id: songs.id, artistId: songs.artistId })
+      .from(songs)
+      .where(eq(songs.id, id))
+      .limit(1);
+    if (!row) throw new NotFoundException('Song not found');
+
+    const patch: Partial<typeof songs.$inferInsert> = {};
+    if (dto.title !== undefined) patch.title = dto.title.trim();
+    if (dto.genre !== undefined) patch.genre = dto.genre.trim() || null;
+    if (dto.year !== undefined) patch.year = dto.year;
+
+    // Artist (and any album rename below) re-links against the effective artist.
+    let artistId = row.artistId;
+    if (dto.artistName !== undefined) {
+      const name = dto.artistName.trim();
+      artistId = name ? await this.resolveArtistId(name) : null;
+      patch.artistId = artistId;
+    }
+    if (dto.albumName !== undefined) {
+      const name = dto.albumName.trim();
+      patch.albumId = name && artistId ? await this.resolveAlbumId(name, artistId) : null;
+    }
+    if (dto.artworkStorageKey !== undefined) {
+      patch.artworkStorageKey = dto.artworkStorageKey; // null clears the artwork
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await this.db
+        .update(songs)
+        .set({ ...patch, updatedAt: new Date() })
+        .where(eq(songs.id, id));
+      await Promise.all([
+        this.cache.del(`songs:detail:${id}`),
+        this.cache.delByPrefix(`songs:list:${userId}`),
+        this.cache.delByPrefix('search:'),
+      ]);
+      this.realtime.emitLibraryChanged(userId, { type: 'song_updated', songId: id });
+    }
+    return this.findById(id);
+  }
+
+  private async resolveArtistId(name: string): Promise<string> {
+    const [existing] = await this.db
+      .select({ id: artists.id })
+      .from(artists)
+      .where(sql`lower(${artists.name}) = lower(${name})`)
+      .limit(1);
+    if (existing) return existing.id;
+    const [created] = await this.db
+      .insert(artists)
+      .values({ name })
+      .returning({ id: artists.id });
+    if (!created) throw new Error('Failed to create artist');
+    return created.id;
+  }
+
+  private async resolveAlbumId(name: string, artistId: string): Promise<string> {
+    const [existing] = await this.db
+      .select({ id: albums.id })
+      .from(albums)
+      .where(and(sql`lower(${albums.name}) = lower(${name})`, eq(albums.artistId, artistId)))
+      .limit(1);
+    if (existing) return existing.id;
+    const [created] = await this.db
+      .insert(albums)
+      .values({ name, artistId })
+      .returning({ id: albums.id });
+    if (!created) throw new Error('Failed to create album');
+    return created.id;
   }
 
   async getStreamInfo(id: string): Promise<{ url: string; expiresIn: number }> {

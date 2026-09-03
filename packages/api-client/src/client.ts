@@ -57,6 +57,19 @@ export interface FlowbyteClientOptions {
 type Body = Record<string, unknown> | undefined;
 type FetchBody = Parameters<typeof fetch>[1] extends { body?: infer B } ? B : never;
 
+/** Editable song metadata fields (PATCH /songs/:id). */
+export interface UpdateSongInput {
+  title?: string;
+  /** Artist display name; empty string clears the artist link. */
+  artistName?: string;
+  /** Album display name; empty string clears the album link. */
+  albumName?: string;
+  genre?: string;
+  year?: number;
+  /** Storage key from `uploadArtwork`; null removes the artwork. */
+  artworkStorageKey?: string | null;
+}
+
 export class FlowbyteClient {
   private readonly baseUrl: string;
   private readonly tokenStorage: TokenStorage;
@@ -96,11 +109,23 @@ export class FlowbyteClient {
     const tokens = await this.tokenStorage.getTokens();
     if (tokens) headers.Authorization = `Bearer ${tokens.accessToken}`;
 
-    const res = await this.fetchImpl(`${this.baseUrl}${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    const url = `${this.baseUrl}${path}`;
+    let res: Response;
+    try {
+      res = await this.fetchImpl(url, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new FlowbyteError(
+        `Network error (${method} ${url}): ${msg}`,
+        0,
+        'NETWORK_ERROR',
+        { url, method, cause: msg },
+      );
+    }
 
     if (
       res.status === 401 &&
@@ -111,7 +136,7 @@ export class FlowbyteClient {
       const refreshed = await this.tryRefresh();
       if (refreshed) {
         headers.Authorization = `Bearer ${refreshed.accessToken}`;
-        const retry = await this.fetchImpl(`${this.baseUrl}${path}`, {
+        const retry = await this.fetchImpl(url, {
           method,
           headers,
           body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -220,6 +245,10 @@ export class FlowbyteClient {
     return this.request<Song>('GET', `/songs/${id}`);
   }
 
+  async updateSong(id: string, patch: UpdateSongInput): Promise<Song> {
+    return this.request<Song>('PATCH', `/songs/${id}`, patch as Record<string, unknown>);
+  }
+
   async getSongWithLyrics(id: string): Promise<SongWithLyrics> {
     return this.request<SongWithLyrics>('GET', `/songs/${id}/lyrics`);
   }
@@ -269,6 +298,13 @@ export class FlowbyteClient {
 
   async addFavorite(songId: string): Promise<void> {
     return this.request<void>('POST', `/favorites/${songId}`);
+  }
+
+  /** Bulk favorite (multi-select) — single round trip. */
+  async addFavorites(songIds: string[]): Promise<{ added: number }> {
+    return this.request<{ added: number }>('POST', '/favorites/batch', {
+      body: { songIds },
+    });
   }
 
   async removeFavorite(songId: string): Promise<void> {
@@ -513,7 +549,7 @@ export class FlowbyteClient {
 
     void tokens.then((t) => {
       if (!t) return;
-      const url = `${this.baseUrl}/api/realtime/events?token=${encodeURIComponent(t.accessToken)}`;
+      const url = `${this.baseUrl}/realtime/events?token=${encodeURIComponent(t.accessToken)}`;
       eventSource = new EventSource(url);
 
       eventSource.addEventListener('library:changed', ((e: MessageEvent) => {

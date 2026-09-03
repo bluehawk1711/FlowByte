@@ -1,21 +1,18 @@
+import { ListMusic, Mic2, Music2, Pin, Volume2 } from '../lib/icons';
 import {
-  ListMusic,
-  Mic2,
-  Music2,
-  Pause,
-  Pin,
-  Play,
-  Repeat,
-  Repeat1,
-  Shuffle,
-  SkipBack,
-  SkipForward,
-  Volume2,
-} from 'lucide-react';
+  PauseIcon,
+  PlayIcon,
+  Repeat1Icon,
+  RepeatIcon,
+  ShuffleIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+} from '@animateicons/react/lucide';
 import { usePlayer } from '../context/PlayerContext';
 import { cn, formatDuration } from '../lib/utils';
 import { showMiniPlayer } from '../lib/tauri';
 import { Button } from './ui/button';
+import { EqBars } from './EqBars';
 import { Slider } from './ui/slider';
 
 export function NowPlayingBar({
@@ -56,7 +53,7 @@ export function NowPlayingBar({
     <footer className="flex h-[72px] shrink-0 items-center gap-4 border-t border-line bg-player px-4">
       {/* Track — clickable to open expanded player */}
       <button
-        className="flex w-48 min-w-0 items-center gap-3 rounded-md p-1 -m-1 text-left transition-colors duration-150 hover:bg-white/6 md:w-60 lg:w-72"
+        className="relative flex w-48 min-w-0 items-center gap-3 rounded-md p-1 -m-1 text-left transition-colors duration-150 hover:bg-white/6 md:w-60 lg:w-72"
         onClick={onExpand}
         aria-label="Expand player"
       >
@@ -77,6 +74,14 @@ export function NowPlayingBar({
             {current.artistName ?? 'Unknown artist'}
           </p>
         </div>
+        {playing && (
+          <span
+            className="absolute right-1 top-1 flex h-5 items-center rounded-md bg-black/60 px-1.5 text-accent-hover backdrop-blur-sm"
+            title="Playing"
+          >
+            <EqBars />
+          </span>
+        )}
       </button>
 
       {/* Controls */}
@@ -90,7 +95,7 @@ export function NowPlayingBar({
             aria-label="Shuffle"
             aria-pressed={shuffle}
           >
-            <Shuffle className="h-4 w-4" />
+            <ShuffleIcon size={16} />
           </Button>
           <Button
             variant="ghost"
@@ -99,7 +104,7 @@ export function NowPlayingBar({
             onClick={previous}
             aria-label="Previous"
           >
-            <SkipBack className="h-5 w-5 fill-current" />
+            <SkipBackIcon size={20} />
           </Button>
           <Button
             variant="ghost"
@@ -107,11 +112,7 @@ export function NowPlayingBar({
             onClick={togglePlay}
             aria-label={playing ? 'Pause' : 'Play'}
           >
-            {playing ? (
-              <Pause className="h-5 w-5" />
-            ) : (
-              <Play className="h-5 w-5 translate-x-px" />
-            )}
+            {playing ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
           </Button>
           <Button
             variant="ghost"
@@ -120,7 +121,7 @@ export function NowPlayingBar({
             onClick={next}
             aria-label="Next"
           >
-            <SkipForward className="h-5 w-5 fill-current" />
+            <SkipForwardIcon size={20} />
           </Button>
           <Button
             variant="ghost"
@@ -130,7 +131,7 @@ export function NowPlayingBar({
             aria-label="Repeat"
             aria-pressed={repeat !== 'off'}
           >
-            {repeat === 'one' ? <Repeat1 className="h-4 w-4" /> : <Repeat className="h-4 w-4" />}
+            {repeat === 'one' ? <Repeat1Icon size={16} /> : <RepeatIcon size={16} />}
           </Button>
         </div>
         <div className="flex w-full max-w-xl items-center gap-2 text-[11px] tabular-nums text-ink-2">

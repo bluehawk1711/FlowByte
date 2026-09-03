@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
@@ -31,6 +31,7 @@ const CloudSongRowComponent: React.FC<CloudSongRowProps> = ({
   onToggleDownload,
   downloading = false,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const heartScale = useSharedValue(1);
 
   const heartStyle = useAnimatedStyle(() => ({
@@ -114,7 +115,7 @@ const CloudSongRowComponent: React.FC<CloudSongRowProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 8,
     marginVertical: 2,
-    backgroundColor: "#14141E",
+    backgroundColor: AppColors.backgroundCard,
   },
   activeRow: {
     backgroundColor: "rgba(168, 85, 247, 0.12)",

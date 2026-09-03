@@ -1,20 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  Copy,
   Heart,
   ListMusic,
   ListPlus,
   Music4,
+  Pencil,
   Play,
   Plus,
   SkipForward,
   Trash2,
-} from 'lucide-react';
+} from '../lib/icons';
 import { toast } from 'sonner';
 import type { Song } from '@flowbyte/types';
 import type { Playlist } from '@flowbyte/types';
 import { usePlayer } from '../context/PlayerContext';
 import { client } from '../lib/api';
 import { ContextMenu, type ContextMenuItem } from './ui/context-menu';
+import { EditSongDialog } from './EditSongDialog';
 
 interface SongContextMenuState {
   song: Song;
@@ -39,6 +42,9 @@ export function SongContextMenu({
 }) {
   const { playSong, playNext, addToQueue } = usePlayer();
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  // The song being edited. Held separately from the menu state so the dialog
+  // stays open after the menu closes and never reappears on later menu opens.
+  const [editSong, setEditSong] = useState<Song | null>(null);
 
   // Load favorites to show correct toggle state
   useEffect(() => {
@@ -52,25 +58,50 @@ export function SongContextMenu({
 
   const song = state?.song;
   const isFav = song ? favorites.has(song.id) : false;
+  // Local (not uploaded) files know their on-disk path — expose it directly.
+  const localPath =
+    song?.localUri ?? (song?.source === 'local' && song?.url ? song.url : null);
 
+  /**
+   * Optimistic toggle that reconciles with the server on failure. A failed
+   * request can still land server-side (idempotent add, network blip after
+   * commit), so on error we re-fetch and adopt the server truth — the menu can
+   * never claim "Add" for a song that is actually favorited (or vice-versa).
+   */
   const toggleFavorite = useCallback(async () => {
     if (!song) return;
+    const wasFav = isFav;
+    const apply = (fav: boolean) =>
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        if (fav) next.add(song.id);
+        else next.delete(song.id);
+        return next;
+      });
+
+    apply(!wasFav); // optimistic flip for instant feedback
     try {
-      if (isFav) {
+      if (wasFav) {
         await client.removeFavorite(song.id);
-        setFavorites((prev) => {
-          const next = new Set(prev);
-          next.delete(song.id);
-          return next;
-        });
         toast.success('Removed from favorites');
       } else {
         await client.addFavorite(song.id);
-        setFavorites((prev) => new Set(prev).add(song.id));
         toast.success('Added to favorites');
       }
     } catch {
-      toast.error('Could not update favorite');
+      try {
+        const favs = await client.getFavorites();
+        const nowFav = favs.some((f) => f.id === song.id);
+        setFavorites(new Set(favs.map((f) => f.id)));
+        if (nowFav !== wasFav) {
+          toast.success(nowFav ? 'Added to favorites' : 'Removed from favorites');
+        } else {
+          toast.error('Could not update favorite');
+        }
+      } catch {
+        apply(wasFav); // roll the optimistic flip back
+        toast.error('Could not update favorite');
+      }
     }
   }, [song, isFav]);
 
@@ -131,7 +162,7 @@ export function SongContextMenu({
           icon: ListMusic,
           subItems: [
             {
-              label: '+ New playlist',
+              label: 'New playlist',
               icon: Plus,
               onClick: () => void createAndAdd(),
             },
@@ -147,6 +178,25 @@ export function SongContextMenu({
         },
         { label: '', separator: true },
         {
+          label: 'Edit details',
+          icon: Pencil,
+          onClick: () => setEditSong(song),
+        },
+        ...(localPath
+          ? [
+              {
+                label: 'Copy file path',
+                icon: Copy,
+                onClick: () => {
+                  void navigator.clipboard
+                    ?.writeText(localPath)
+                    .then(() => toast.success('File path copied'))
+                    .catch(() => toast.error('Could not copy the file path'));
+                },
+              },
+            ]
+          : []),
+        {
           label: 'Delete from library',
           icon: Trash2,
           danger: true,
@@ -156,7 +206,17 @@ export function SongContextMenu({
     : [];
 
   return (
-    <ContextMenu items={items} position={state?.position ?? null} onClose={onClose} />
+    <>
+      <ContextMenu items={items} position={state?.position ?? null} onClose={onClose} />
+      {editSong && (
+        <EditSongDialog
+          key={editSong.id}
+          song={editSong}
+          open
+          onClose={() => setEditSong(null)}
+        />
+      )}
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -27,6 +27,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   lightTheme = false,
   titleAlign = "left",
 }) => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const textColor = lightTheme ? AppColors.textLight : AppColors.textPrimary;
 
@@ -67,7 +68,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",

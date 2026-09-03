@@ -1,7 +1,7 @@
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import SongList from "@/components/SongList";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import useAudioContext from "@/hooks/store/audioContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +23,7 @@ import {
 } from "react-native";
 
 export default function FolderDetailScreen() {
+  const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const [albumName, setAlbumName] = useState<string>("");
   const [audioFiles, setAudioFiles] = useState<Asset[]>([]);
@@ -177,7 +178,7 @@ export default function FolderDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -267,6 +268,8 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+
 
 export function SearchInput({
   searchQuery,

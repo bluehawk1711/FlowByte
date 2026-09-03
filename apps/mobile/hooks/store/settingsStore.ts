@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { zustandStorage } from "./storageAdapter";
 
+export type BackgroundMode = "dark" | "light";
+
 export type SettingsState = {
   // Appearance
   accentColor: string;
@@ -12,6 +14,16 @@ export type SettingsState = {
 
   accentPink: string;
   setAccentPink: (color: string) => void;
+
+  /** Dark / light background mode (live restyle). */
+  backgroundMode: BackgroundMode;
+  setBackgroundMode: (mode: BackgroundMode) => void;
+
+  /**
+   * Bumped on every appearance change. Themed styles re-memoize when this
+   * changes, so switching accent/background repaints the whole UI instantly.
+   */
+  themeVersion: number;
 
   // Playback
   alwaysShuffle: boolean;
@@ -35,13 +47,22 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       // Defaults
       accentColor: "#00F5D4",
-      setAccentColor: (color) => set({ accentColor: color }),
+      setAccentColor: (color) =>
+        set((state) => ({ accentColor: color, themeVersion: state.themeVersion + 1 })),
 
       accentPurple: "#A855F7",
-      setAccentPurple: (color) => set({ accentPurple: color }),
+      setAccentPurple: (color) =>
+        set((state) => ({ accentPurple: color, themeVersion: state.themeVersion + 1 })),
 
       accentPink: "#FF1493",
-      setAccentPink: (color) => set({ accentPink: color }),
+      setAccentPink: (color) =>
+        set((state) => ({ accentPink: color, themeVersion: state.themeVersion + 1 })),
+
+      backgroundMode: "dark",
+      setBackgroundMode: (mode) =>
+        set((state) => ({ backgroundMode: mode, themeVersion: state.themeVersion + 1 })),
+
+      themeVersion: 0,
 
       alwaysShuffle: false,
       toggleAlwaysShuffle: () =>
@@ -66,6 +87,17 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: "settings-storage",
       storage: createJSONStorage(() => zustandStorage),
+      partialize: (state) => ({
+        accentColor: state.accentColor,
+        accentPurple: state.accentPurple,
+        accentPink: state.accentPink,
+        backgroundMode: state.backgroundMode,
+        alwaysShuffle: state.alwaysShuffle,
+        alwaysRepeat: state.alwaysRepeat,
+        autoplayNext: state.autoplayNext,
+        resumeOnStartup: state.resumeOnStartup,
+        showRandomCoverArt: state.showRandomCoverArt,
+      }),
     },
   ),
 );

@@ -19,6 +19,14 @@ export default defineConfig({
       include: [/node_modules/, /packages\//],
     },
   },
+  optimizeDeps: {
+    include: [
+      '@flowbyte/api-client',
+      '@flowbyte/config',
+      '@flowbyte/types',
+      '@flowbyte/validation',
+    ],
+  },
   clearScreen: false,
   server: {
     port: 1420,

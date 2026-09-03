@@ -1,6 +1,6 @@
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { SongListItem } from "@/components/SongListItem";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // Helper function to format duration
 
 const FavouriteScreen = () => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const songs = useFavourite((state) => state.songs);
   const currentSong = useAudioContext((state) => state.song);
@@ -141,7 +142,7 @@ const FavouriteScreen = () => {
 
 export default FavouriteScreen;
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   containerStyle: {
     backgroundColor: AppColors.backgroundCard,
     width: "90%",
@@ -270,3 +271,5 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+

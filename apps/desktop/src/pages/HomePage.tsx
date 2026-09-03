@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Clock, Heart, Sparkles } from 'lucide-react';
+import { Clock, Heart, Sparkles } from '../lib/icons';
 import type { RecentlyPlayedEntry, Song } from '@flowbyte/types';
 import { client } from '../lib/api';
 import { usePlayer } from '../context/PlayerContext';
@@ -67,7 +67,7 @@ export function HomePage() {
   }, [favorites, playQueue]);
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-8 py-10">
+    <div className="w-full px-10 py-10">
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-ink-1">{greeting()}</h1>
@@ -95,7 +95,7 @@ export function HomePage() {
           ) : (
             <>
               {recent.length > 0 && (
-                <section>
+                <section className="animate-fade-in-up">
                   <SectionHeader title="Recently played" />
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                     {recent.slice(0, 8).map(({ song }) => (
@@ -106,7 +106,7 @@ export function HomePage() {
               )}
 
               {favorites.length > 0 && (
-                <section>
+                <section className="animate-fade-in-up [animation-delay:60ms]">
                   <SectionHeader title="Your favorites" action={
                     <button onClick={playFavorites} className="text-xs font-medium text-ink-2 transition-colors hover:text-ink-1">
                       Play all
@@ -121,7 +121,7 @@ export function HomePage() {
               )}
 
               {added.length > 0 && (
-                <section>
+                <section className="animate-fade-in-up [animation-delay:120ms]">
                   <SectionHeader title="Recently added" />
                   <div className="space-y-0.5">
                     {added.map((s, i) => (
@@ -152,7 +152,7 @@ function AlbumCard({ song, onPlay }: { song: Song; onPlay: () => void }) {
   return (
     <button
       onClick={onPlay}
-      className="group flex flex-col rounded-lg p-3 text-left transition-colors duration-150 hover:bg-white/8"
+      className="group flex flex-col rounded-lg p-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-white/8 hover:shadow-elev-2 active:scale-[0.98]"
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-md bg-card shadow-elev-1">
         {song.artworkUrl || song.cover ? (

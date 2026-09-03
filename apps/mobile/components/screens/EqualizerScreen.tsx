@@ -1,5 +1,5 @@
 import { EQSlider } from "@/components/EQSlider";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -35,6 +35,7 @@ export const EqualizerScreen: React.FC<EqualizerScreenProps> = ({
   onSavePreset,
   onReset,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const [isEnabled, setIsEnabled] = useState(true);
   const [activePreset, setActivePreset] = useState("custom");
@@ -225,7 +226,7 @@ export const EqualizerScreen: React.FC<EqualizerScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -396,3 +397,5 @@ const styles = StyleSheet.create({
     color: AppColors.textLight,
   },
 });
+
+

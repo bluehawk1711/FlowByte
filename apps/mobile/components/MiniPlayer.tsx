@@ -1,10 +1,10 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import useAudioContext from "@/hooks/store/audioContext";
 import useFavourite from "@/hooks/store/favourite";
 import { Ionicons } from "@expo/vector-icons";
 import { impactAsync, ImpactFeedbackStyle } from "expo-haptics";
 import { useRouter } from "expo-router";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { AudioPro, AudioProState, useAudioPro } from "react-native-audio-pro";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
@@ -18,6 +18,7 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
   showHeart = false,
   lightTheme = false,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   // Get data from audio context
   const song = useAudioContext((state) => state.song);
@@ -31,17 +32,11 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
   const isPlaying =
     audioState === AudioProState.PLAYING ||
     audioState === AudioProState.LOADING;
-  const favouriteToggle = useFavourite((state) => state.toggleSong);
-
-  // Memoize colors to prevent re-computation
-  const colors = useMemo(
-    () => ({
-      bg: lightTheme ? "#E8E8F0" : "#1A1A1A",
-      text: lightTheme ? AppColors.textLight : AppColors.textPrimary,
-      subtext: lightTheme ? "#666" : AppColors.textSecondary,
-    }),
-    [lightTheme],
-  );
+  const favouriteToggle = useFavourite((state) => state.toggleSong);  const colors = {
+    bg: lightTheme ? AppColors.backgroundCardLight : AppColors.backgroundCard,
+    text: lightTheme ? AppColors.textLight : AppColors.textPrimary,
+    subtext: lightTheme ? AppColors.textMuted : AppColors.textSecondary,
+  };
 
   const onPlayPause = useCallback(() => {
     if (Platform.OS === "ios" || Platform.OS === "android") {
@@ -134,7 +129,7 @@ const MiniPlayerComponent: React.FC<MiniPlayerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",

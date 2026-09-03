@@ -30,7 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const me = await client.me();
         setUser(me);
-      } catch {
+      } catch (err) {
+        console.error('[Auth] me() failed:', err);
         setUser(null);
       } finally {
         setLoading(false);

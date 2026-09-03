@@ -5,7 +5,7 @@ import {
   Music2,
   Trash2,
   X,
-} from 'lucide-react';
+} from '../lib/icons';
 import { cn, formatDuration } from '../lib/utils';
 import { usePlayer } from '../context/PlayerContext';
 import { Button } from './ui/button';

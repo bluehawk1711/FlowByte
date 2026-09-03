@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Mic2, Music2, X } from 'lucide-react';
+import { Mic2, Music2, X } from '../lib/icons';
 import type { NormalizedLyrics } from '@flowbyte/types';
 import { client } from '../lib/api';
 import { usePlayer } from '../context/PlayerContext';

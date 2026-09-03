@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import React, { useCallback } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -22,8 +22,9 @@ export const TabFilter: React.FC<TabFilterProps> = ({
   variant = "underline",
   lightTheme = false,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const isChip = variant === "chip";
-  const inactiveColor = lightTheme ? "#888" : AppColors.textSecondary;
+  const inactiveColor = lightTheme ? AppColors.textMuted : AppColors.textSecondary;
 
   // Memoize render function for FlatList
   const renderTab = useCallback(
@@ -93,7 +94,7 @@ export const TabFilter: React.FC<TabFilterProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingVertical: 4,
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#3A3A3A",
+    borderColor: AppColors.divider,
   },
   chipTabActive: {
     backgroundColor: AppColors.textPrimary,

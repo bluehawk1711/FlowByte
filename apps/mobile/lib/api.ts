@@ -44,8 +44,9 @@ export let client: FlowbyteClient | null = null;
 
 export async function createClient(): Promise<FlowbyteClient> {
   const deviceId = await getDeviceId();
+  const base = (await getApiUrl()).replace(/\/+$/, '');
   return new FlowbyteClient({
-    baseUrl: await getApiUrl(),
+    baseUrl: `${base}/api`,
     tokenStorage,
     platform: "mobile",
     deviceName: `flowbyte-mobile-${deviceId.slice(-6)}`,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { X } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { Button } from './button';
 
@@ -26,7 +26,13 @@ export function Dialog({
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
-    ref.current?.focus();
+    // Only focus the dialog container if nothing inside already has focus (e.g. an autofocus input)
+    requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (ref.current && (!active || !ref.current.contains(active))) {
+        ref.current.focus();
+      }
+    });
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 

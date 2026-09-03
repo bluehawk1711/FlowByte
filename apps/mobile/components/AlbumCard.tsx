@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import React from "react";
 import {
   Dimensions,
@@ -25,6 +25,7 @@ const AlbumCardComponent: React.FC<AlbumCardProps> = ({
   coverImage,
   onPress,
 }) => {
+  const styles = useThemedStyles(createStyles);
   return (
     <Pressable style={styles.container} onPress={onPress}>
       {coverImage ? (
@@ -44,7 +45,7 @@ const AlbumCardComponent: React.FC<AlbumCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     width: CARD_WIDTH,
     marginBottom: 20,
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   placeholder: {
-    backgroundColor: "#2A2A2A",
+    backgroundColor: AppColors.backgroundCard,
     justifyContent: "center",
     alignItems: "center",
   },

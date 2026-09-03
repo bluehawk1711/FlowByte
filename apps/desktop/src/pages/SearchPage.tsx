@@ -6,7 +6,7 @@ import {
   Search,
   SearchX,
   Sparkles,
-} from 'lucide-react';
+} from '../lib/icons';
 import type { Song, Artist, Album, Playlist } from '@flowbyte/types';
 import { client } from '../lib/api';
 import { usePlayer } from '../context/PlayerContext';
@@ -14,6 +14,8 @@ import { Input } from '../components/ui/input';
 import { SongRow } from '../components/SongRow';
 import { EmptyState } from '../components/ui/feedback';
 import { Skeleton } from '../components/ui/skeleton';
+import { ArtistDialog } from '../components/ArtistDialog';
+import { SongContextMenu, type SongContextMenuState } from '../components/SongContextMenu';
 import { cn } from '../lib/utils';
 
 interface SearchResult {
@@ -38,6 +40,8 @@ export function SearchPage() {
   const [results, setResults] = useState<SearchResult>({ songs: [], artists: [], albums: [], playlists: [] });
   const [loading, setLoading] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
+  const [artist, setArtist] = useState<Artist | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<SongContextMenuState | null>(null);
 
   const flatResults: FlatItem[] = [
     ...results.songs.map((s) => ({ type: 'song' as const, id: s.id, label: s.title, sub: s.artistName ?? undefined, data: s })),
@@ -159,7 +163,7 @@ export function SearchPage() {
                       song={s}
                       queue={results.songs}
                       index={i}
-                      onContextMenu={() => {}}
+                      onContextMenu={(song, pos) => setCtxMenu({ song, position: pos })}
                     />
                   </div>
                 ))}
@@ -170,9 +174,11 @@ export function SearchPage() {
               <ResultGroup title="Artists" icon={Mic2} count={results.artists.length}>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
                   {results.artists.map((a) => (
-                    <div
+                    <button
+                      type="button"
                       key={a.id}
-                      className="flex flex-col items-center rounded-lg p-3 text-center transition-colors hover:bg-white/8"
+                      onClick={() => setArtist(a)}
+                      className="flex flex-col items-center rounded-lg p-3 text-center transition-colors hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                       {a.artworkUrl ? (
                         <img src={a.artworkUrl} alt="" className="h-16 w-16 rounded-full object-cover shadow-elev-1" />
@@ -182,7 +188,7 @@ export function SearchPage() {
                         </div>
                       )}
                       <p className="mt-2 truncate text-sm font-medium text-ink-1">{a.name}</p>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </ResultGroup>
@@ -210,6 +216,9 @@ export function SearchPage() {
           </div>
         )}
       </div>
+
+      <SongContextMenu state={ctxMenu} onClose={() => setCtxMenu(null)} />
+      <ArtistDialog artist={artist} onClose={() => setArtist(null)} />
     </div>
   );
 }

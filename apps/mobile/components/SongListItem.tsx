@@ -1,9 +1,9 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import { useSelectionStore } from "@/hooks/store/selectionStore";
 import { isDownloaded } from "@/lib/offline";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SongActionsMenu } from "./SongActionsMenu";
 
@@ -22,6 +22,7 @@ const SongListItemComponent: React.FC<SongListItemProps> = ({
   onPress,
   lightTheme = false,
 }) => {
+  const styles = useThemedStyles(createStyles);
   const isSelectionMode = useSelectionStore((state) => state.selectionMode);
   const isSelected = useSelectionStore((state) =>
     song ? state.selectedIds.includes(song.id) : false,
@@ -44,19 +45,16 @@ const SongListItemComponent: React.FC<SongListItemProps> = ({
     return () => { mounted = false; };
   }, [song]);
 
-  const colors = useMemo(
-    () => ({
-      bg:
-        isActive || isSelected
-          ? lightTheme
-            ? "#F0E6F5"
-            : "rgba(168, 85, 247, 0.15)"
-          : "transparent",
-      text: lightTheme ? AppColors.textLight : AppColors.textPrimary,
-      subtext: lightTheme ? "#666" : AppColors.textSecondary,
-    }),
-    [isActive, isSelected, lightTheme],
-  );
+  const colors = {
+    bg:
+      isActive || isSelected
+        ? lightTheme
+          ? "#F0E6F5"
+          : "rgba(168, 85, 247, 0.15)"
+        : "transparent",
+    text: lightTheme ? AppColors.textLight : AppColors.textPrimary,
+    subtext: lightTheme ? AppColors.textMuted : AppColors.textSecondary,
+  };
 
   if (!song) return null;
 
@@ -164,7 +162,7 @@ const SongListItemComponent: React.FC<SongListItemProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
@@ -180,7 +178,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   placeholderArt: {
-    backgroundColor: "#2A2A2A",
+    backgroundColor: AppColors.backgroundCard,
     justifyContent: "center",
     alignItems: "center",
   },

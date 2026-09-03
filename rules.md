@@ -33,3 +33,9 @@ Non-negotiable project rules. Violations should be fixed immediately.
 18. Read `memory.md` and `architecture.md` before touching a module.
 19. After completing a task: update `memory.md` status table; update `architecture.md` if design changed.
 20. Verify with typecheck/build for the affected package before declaring done.
+
+## UI / Icons
+
+21. **Never import icons from `lucide-react` (or any icon package) directly in the desktop app** — always import from `src/lib/icons.tsx`, which mirrors the original lucide names. It prefers the animated glyphs from `@animateicons/react/lucide`; glyphs that set lacks get a CSS hover animation via the `[data-icon-anim]` keyframes in `index.css` (never a raw static icon).
+22. **Animated icon sizing**: `@animateicons/react` icons are DOM-wrapped and can't be sized via CSS classes — the `src/lib/icons.tsx` wrapper converts tailwind `h-*`/`w-*` classes (including `h-[Npx]` and the standard spacing scale) into the numeric `size` prop. Keep writing `<Icon className="h-4 w-4" />`; do not add a separate `size` prop.
+23. **Do not add new icon imports outside the module.** If an animated equivalent is missing, extend the mapping in `src/lib/icons.tsx` (keep the same public name; add the `makeCssAnimated` variant for lucide-only glyphs). Mobile stays on lucide — the animated package is DOM-based (motion/react) and cannot run on React Native.

@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { useApiSync } from "@/hooks/useApiSync";
 import useAudioContext from "@/hooks/store/audioContext";
 import { toMobileSong } from "@/lib/sync";
@@ -24,6 +24,7 @@ import Animated, { FadeInRight } from "react-native-reanimated";
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<DownloadRecord>);
 
 export const DownloadsScreen: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { signedIn } = useApiSync();
@@ -156,7 +157,7 @@ export const DownloadsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -238,3 +239,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+

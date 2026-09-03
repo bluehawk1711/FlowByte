@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Music2 } from 'lucide-react';
+import { CloudUpload, Download, HardDrive, Music2 } from '../lib/icons';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
+import { GirlListeningAnimation } from '../components/GirlListeningAnimation';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -37,183 +38,244 @@ export function AuthPage() {
   };
 
   return (
-    <div className="flex h-full items-center justify-center bg-app">
+    <div className="relative flex h-full items-center justify-center overflow-hidden bg-app">
       {/* Ambient glow behind content */}
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         aria-hidden
       >
-        <div className="h-[500px] w-[500px] rounded-full bg-accent/[0.07] blur-[120px]" />
+        <div className="h-[560px] w-[560px] rounded-full bg-accent/[0.07] blur-[120px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-sm px-4">
-        {/* ── Welcome Step ── */}
-        {step === 'welcome' && (
-          <div
-            className={`flex flex-col items-center gap-8 text-center ${transition} animate-fade-in-up`}
-          >
-            {/* Logo with glow */}
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-accent/20 blur-2xl" />
-              <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-accent shadow-elev-2">
-                <Music2 className="h-10 w-10 text-white" />
-              </div>
-            </div>
-
-            {/* Branding */}
-            <div className="space-y-2">
-              <h1 className="text-[32px] font-semibold tracking-tight text-ink-1">
-                Flowbyte
-              </h1>
-              <p className="text-[15px] leading-relaxed text-ink-2">
-                Your music. Your library. Everywhere.
-              </p>
-            </div>
-
-            {/* CTA */}
-            <div className="w-full space-y-3">
-              <Button
-                size="lg"
-                className="w-full text-[15px]"
-                onClick={() => setStep('auth')}
-              >
-                Get Started
-              </Button>
-              <button
-                type="button"
-                className="w-full text-center text-sm text-ink-3 transition-colors duration-150 hover:text-ink-1"
-                onClick={() => {
-                  setMode('login');
-                  setStep('auth');
-                }}
-              >
-                Already have an account?{' '}
-                <span className="text-accent hover:underline">Sign in</span>
-              </button>
-            </div>
+      <div className="relative z-10 flex h-full w-full items-center justify-center gap-8 px-6 lg:gap-20 lg:px-16">
+        {/* ── Left art panel ── */}
+        <div className="hidden w-72 max-w-[38vw] shrink-0 flex-col items-center gap-8 lg:flex xl:w-80">
+          <div className="relative w-full">
+            <div
+              className="absolute inset-8 rounded-full bg-accent/25 blur-3xl"
+              aria-hidden
+            />
+            <GirlListeningAnimation className="relative w-full" />
           </div>
-        )}
+          <div className="space-y-2 text-center">
+            <p className="text-lg font-semibold tracking-tight text-ink-1">
+              Feel the music.
+            </p>
+            <p className="mx-auto max-w-[240px] text-sm leading-relaxed text-ink-3">
+              Your library, your rules — import from YouTube and listen anywhere.
+            </p>
+          </div>
+        </div>
 
-        {/* ── Auth Step ── */}
-        {step === 'auth' && (
-          <Card
-            className={`border-line-strong/50 ${transition} animate-fade-in-up`}
-          >
-            <CardHeader className="items-center gap-3 text-center">
-              {/* Compact logo */}
+        {/* Vertical divider between art and form on wide windows */}
+        <div className="hidden h-72 w-px shrink-0 bg-line lg:block" aria-hidden />
+
+        {/* ── Right column: welcome → auth flow ── */}
+        <div className="mx-auto w-full max-w-sm px-4">
+          {/* ── Welcome Step ── */}
+          {step === 'welcome' && (
+            <div
+              className={`flex flex-col items-center gap-8 text-center ${transition} animate-fade-in-up`}
+            >
+              {/* Logo with glow */}
               <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-accent/20 blur-xl" />
-                <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-accent shadow-elev-1">
-                  <Music2 className="h-6 w-6 text-white" />
+                <div className="absolute inset-0 rounded-full bg-accent/20 blur-2xl" />
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-accent shadow-elev-2">
+                  <Music2 className="h-10 w-10 text-white" />
                 </div>
               </div>
-              <div className="space-y-1">
-                <CardTitle className="text-lg">
-                  {mode === 'register' ? 'Create your account' : 'Welcome back'}
-                </CardTitle>
-                <p className="text-sm text-ink-3">
-                  {mode === 'register'
-                    ? 'Start building your personal library'
-                    : 'Sign in to access your library'}
+
+              {/* Branding */}
+              <div className="space-y-2.5">
+                <h1 className="text-[32px] font-semibold tracking-tight text-ink-1">
+                  Flowbyte
+                </h1>
+                <p className="text-balance text-[15px] leading-relaxed text-ink-2">
+                  Your own private music cloud — import anything from YouTube,
+                  keep the files, and listen on every device.
                 </p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={submit} className="space-y-3">
-                {mode === 'register' && (
-                  <>
+
+              {/* What Flowbyte is — three quick wins */}
+              <div className="w-full space-y-3 text-left">
+                {[
+                  {
+                    icon: Download,
+                    title: 'Import from YouTube',
+                    body: 'Paste a link — songs and playlists download as audio, with artwork and lyrics.',
+                  },
+                  {
+                    icon: CloudUpload,
+                    title: 'A library that follows you',
+                    body: 'Upload what you love and stream it on desktop or mobile — no ads, no limits.',
+                  },
+                  {
+                    icon: HardDrive,
+                    title: 'Your files stay yours',
+                    body: 'Self-hosted storage you control. Nothing is locked to a third-party service.',
+                  },
+                ].map((f, i) => (
+                  <div
+                    key={f.title}
+                    className={`flex items-start gap-3 ${transition} animate-fade-in-up`}
+                    style={{ animationDelay: `${90 + i * 70}ms` }}
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/12 text-accent">
+                      <f.icon className="h-[18px] w-[18px]" />
+                    </div>
+                    <div className="min-w-0 pt-0.5">
+                      <p className="text-sm font-medium text-ink-1">{f.title}</p>
+                      <p className="mt-0.5 text-[13px] leading-relaxed text-ink-3">{f.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <div className="w-full space-y-3">
+                <Button
+                  size="lg"
+                  className="w-full text-[15px]"
+                  onClick={() => setStep('auth')}
+                >
+                  Get Started
+                </Button>
+                <button
+                  type="button"
+                  className="w-full text-center text-sm text-ink-3 transition-colors duration-150 hover:text-ink-1"
+                  onClick={() => {
+                    setMode('login');
+                    setStep('auth');
+                  }}
+                >
+                  Already have an account?{' '}
+                  <span className="text-accent hover:underline">Sign in</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Auth Step ── */}
+          {step === 'auth' && (
+            <Card
+              className={`border-line-strong/50 ${transition} animate-fade-in-up`}
+            >
+              <CardHeader className="items-center gap-3 text-center">
+                {/* Compact logo */}
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-accent/20 blur-xl" />
+                  <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-accent shadow-elev-1">
+                    <Music2 className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <CardTitle className="text-lg">
+                    {mode === 'register' ? 'Create your account' : 'Welcome back'}
+                  </CardTitle>
+                  <p className="text-sm text-ink-3">
+                    {mode === 'register'
+                      ? 'Start building your personal library'
+                      : 'Sign in to access your library'}
+                  </p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={submit} className="space-y-3">
+                  {mode === 'register' && (
+                    <>
+                      <Input
+                        placeholder="Username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        autoComplete="username"
+                      />
+                      <Input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        autoComplete="email"
+                      />
+                    </>
+                  )}
+                  {mode === 'login' && (
                     <Input
-                      placeholder="Username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Username or email"
+                      value={usernameOrEmail}
+                      onChange={(e) => setUsernameOrEmail(e.target.value)}
                       required
                       autoComplete="username"
                     />
-                    <Input
-                      type="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      autoComplete="email"
-                    />
-                  </>
-                )}
-                {mode === 'login' && (
+                  )}
                   <Input
-                    placeholder="Username or email"
-                    value={usernameOrEmail}
-                    onChange={(e) => setUsernameOrEmail(e.target.value)}
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
-                    autoComplete="username"
+                    minLength={8}
+                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                   />
-                )}
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                />
-                <Button type="submit" className="w-full" size="lg" disabled={busy}>
-                  {busy
-                    ? 'Please wait…'
-                    : mode === 'register'
-                      ? 'Create account'
-                      : 'Sign in'}
-                </Button>
-              </form>
+                  <Button type="submit" className="w-full" size="lg" disabled={busy}>
+                    {busy
+                      ? 'Please wait…'
+                      : mode === 'register'
+                        ? 'Create account'
+                        : 'Sign in'}
+                  </Button>
+                </form>
 
-              <div className="mt-4 flex items-center gap-3">
-                <div className="h-px flex-1 bg-line" />
-                <span className="text-xs text-ink-3">or</span>
-                <div className="h-px flex-1 bg-line" />
-              </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-line" />
+                  <span className="text-xs text-ink-3">or</span>
+                  <div className="h-px flex-1 bg-line" />
+                </div>
 
-              <button
-                type="button"
-                className="mt-4 w-full text-center text-sm text-ink-3 transition-colors duration-150 hover:text-ink-1"
-                onClick={() => {
-                  setMode(mode === 'login' ? 'register' : 'login');
-                  setUsernameOrEmail('');
-                  setUsername('');
-                  setEmail('');
-                  setPassword('');
-                }}
-              >
-                {mode === 'login' ? (
-                  <>
-                    Don&apos;t have an account?{' '}
-                    <span className="text-accent hover:underline">Create one</span>
-                  </>
-                ) : (
-                  <>
-                    Already have an account?{' '}
-                    <span className="text-accent hover:underline">Sign in</span>
-                  </>
-                )}
-              </button>
-
-              {mode === 'register' && (
                 <button
                   type="button"
-                  className="mt-2 w-full text-center text-xs text-ink-3/60 transition-colors duration-150 hover:text-ink-3"
+                  className="mt-4 w-full text-center text-sm text-ink-3 transition-colors duration-150 hover:text-ink-1"
                   onClick={() => {
-                    setMode('login');
+                    setMode(mode === 'login' ? 'register' : 'login');
                     setUsernameOrEmail('');
                     setUsername('');
                     setEmail('');
                     setPassword('');
                   }}
                 >
-                  Back to welcome
+                  {mode === 'login' ? (
+                    <>
+                      Don&apos;t have an account?{' '}
+                      <span className="text-accent hover:underline">Create one</span>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{' '}
+                      <span className="text-accent hover:underline">Sign in</span>
+                    </>
+                  )}
                 </button>
-              )}
-            </CardContent>
-          </Card>
-        )}
+
+                {mode === 'register' && (
+                  <button
+                    type="button"
+                    className="mt-2 w-full text-center text-xs text-ink-3/60 transition-colors duration-150 hover:text-ink-3"
+                    onClick={() => {
+                      setMode('login');
+                      setUsernameOrEmail('');
+                      setUsername('');
+                      setEmail('');
+                      setPassword('');
+                    }}
+                  >
+                    Back to welcome
+                  </button>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

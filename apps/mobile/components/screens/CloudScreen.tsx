@@ -1,6 +1,6 @@
 import { CloudSongRow } from "@/components/CloudSongRow";
 import { MiniPlayer } from "@/components/MiniPlayer";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import { useApiSync } from "@/hooks/useApiSync";
 import { client } from "@/lib/api";
@@ -24,6 +24,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const CloudScreen: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { signedIn, syncing } = useApiSync();
@@ -219,7 +220,7 @@ export const CloudScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -320,3 +321,4 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+

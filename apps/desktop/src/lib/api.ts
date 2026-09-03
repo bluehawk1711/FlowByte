@@ -44,8 +44,9 @@ export function setApiUrl(url: string): void {
 }
 
 function createClient(): FlowbyteClient {
+  const base = getApiUrl().replace(/\/+$/, '');
   return new FlowbyteClient({
-    baseUrl: getApiUrl(),
+    baseUrl: `${base}/api`,
     tokenStorage: localStorageStorage,
     platform: 'desktop',
     deviceName: `flowbyte-desktop-${getDeviceId().slice(-6)}`,
@@ -61,6 +62,14 @@ export interface DesktopSettings {
   notifyOnComplete: boolean;
   /** Show an embedded YouTube iframe preview of pasted videos (with download button). */
   iframePreview: boolean;
+  /**
+   * Upload imported songs to the cloud library automatically? Default OFF —
+   * imports are downloaded locally and stay playable; uploading is always
+   * available per-song from the Downloads page.
+   */
+  uploadImports: boolean;
+  /** SmoothUI cursor-follow glow (custom cursor) — toggled from Settings. */
+  cursorFollow: boolean;
 }
 
 const DEFAULT_SETTINGS: DesktopSettings = {
@@ -69,6 +78,8 @@ const DEFAULT_SETTINGS: DesktopSettings = {
   importTranscode: false,
   notifyOnComplete: true,
   iframePreview: true,
+  uploadImports: false,
+  cursorFollow: false,
 };
 
 export function getSettings(): DesktopSettings {
@@ -76,10 +87,22 @@ export function getSettings(): DesktopSettings {
   return raw ? { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<DesktopSettings>) } : DEFAULT_SETTINGS;
 }
 
+// Settings change notifications (keeps app-level effects live, e.g. cursor)
+type SettingsListener = (settings: DesktopSettings) => void;
+const settingsListeners = new Set<SettingsListener>();
+
+export function subscribeSettings(listener: SettingsListener): () => void {
+  settingsListeners.add(listener);
+  return () => {
+    settingsListeners.delete(listener);
+  };
+}
+
 export function saveSettings(patch: Partial<DesktopSettings>): DesktopSettings {
   const next = { ...getSettings(), ...patch };
   localStorage.setItem(KEYS.settings, JSON.stringify(next));
   if (patch.apiUrl) setApiUrl(patch.apiUrl);
+  for (const listener of settingsListeners) listener(next);
   return next;
 }
 
@@ -109,6 +132,11 @@ export interface SavedPlaylistItem {
   thumbnail: string | null;
   isPlaylist: boolean;
   savedAt: string;
+  importedSongId?: string;
+  /** Local file of a downloaded (not uploaded) import — plays offline-first. */
+  localFilePath?: string | null;
+  /** On-disk thumbnail of the local import (shown instead of the remote one). */
+  localArtworkPath?: string | null;
 }
 
 export interface SavedPlaylist {
@@ -125,6 +153,27 @@ export function getSavedPlaylists(): SavedPlaylist[] {
 
 function persistSavedPlaylists(list: SavedPlaylist[]): void {
   localStorage.setItem(KEYS.savedPlaylists, JSON.stringify(list));
+  emitSavedPlaylistsChanged();
+}
+
+// ---------------------------------------------------------------------------
+// Saved-playlist change notifications (keeps sidebar + Saved page in sync)
+// ---------------------------------------------------------------------------
+
+type PlaylistListener = () => void;
+
+const playlistListeners = new Set<PlaylistListener>();
+
+/** Subscribe to any saved-playlist mutation (add/remove/rename/delete). */
+export function subscribeSavedPlaylists(listener: PlaylistListener): () => void {
+  playlistListeners.add(listener);
+  return () => {
+    playlistListeners.delete(listener);
+  };
+}
+
+function emitSavedPlaylistsChanged(): void {
+  for (const listener of playlistListeners) listener();
 }
 
 export function createSavedPlaylist(name: string): SavedPlaylist {
@@ -140,6 +189,12 @@ export function createSavedPlaylist(name: string): SavedPlaylist {
 
 export function deleteSavedPlaylist(id: string): void {
   persistSavedPlaylists(getSavedPlaylists().filter((p) => p.id !== id));
+}
+
+export function renameSavedPlaylist(id: string, name: string): void {
+  persistSavedPlaylists(
+    getSavedPlaylists().map((p) => (p.id === id ? { ...p, name: name.trim() || p.name } : p)),
+  );
 }
 
 export function addToSavedPlaylist(
@@ -167,4 +222,94 @@ export function removeSavedItem(playlistId: string, itemId: string): void {
       p.id === playlistId ? { ...p, items: p.items.filter((i) => i.id !== itemId) } : p,
     ),
   );
+}
+
+export function stampSavedItemImported(
+  videoId: string,
+  songId: string,
+): void {
+  persistSavedPlaylists(
+    getSavedPlaylists().map((p) => ({
+      ...p,
+      items: p.items.map((i) =>
+        i.videoId === videoId ? { ...i, importedSongId: songId } : i,
+      ),
+    })),
+  );
+}
+
+/**
+ * Remember the on-disk file of a downloaded (not uploaded) import per video.
+ * `artworkPath` (yt-dlp's local thumbnail) is stored alongside it so local
+ * songs can show real artwork without uploading anything.
+ */
+export function stampSavedItemLocalFile(
+  videoId: string,
+  filePath: string,
+  artworkPath?: string | null,
+): void {
+  const list = getSavedPlaylists();
+  let changed = false;
+  const next = list.map((p) => ({
+    ...p,
+    items: p.items.map((i) => {
+      if (i.videoId !== videoId || i.localFilePath === filePath) return i;
+      changed = true;
+      return { ...i, localFilePath: filePath, localArtworkPath: artworkPath ?? null };
+    }),
+  }));
+  if (changed) persistSavedPlaylists(next);
+}
+
+/**
+ * Build a type-safe client-only `Song` for a file that lives on disk. Used to
+ * play a downloaded import without uploading it to the cloud library — the
+ * URL/localUri are resolved through `convertFileSrc` by `resolvePlayUrl`. If
+ * a local thumbnail was downloaded next to the audio it is exposed through
+ * `cover` so every surface (rows, player, cards) shows real artwork.
+ */
+export function localImportSong(input: {
+  id: string;
+  title: string;
+  artistName?: string | null;
+  duration?: number;
+  year?: number | null;
+  genre?: string | null;
+  sourceUrl?: string | null;
+  sourceId?: string | null;
+  filePath: string;
+  /** On-disk thumbnail (e.g. `…/imports/<video>.webp`). */
+  artworkPath?: string | null;
+}): Song {
+  const now = new Date().toISOString();
+  return {
+    id: input.id,
+    title: input.title,
+    artistId: null,
+    artistName: input.artistName ?? null,
+    albumId: null,
+    albumName: null,
+    duration: input.duration ?? 0,
+    trackNumber: null,
+    year: input.year ?? null,
+    genre: input.genre ?? null,
+    language: null,
+    codec: null,
+    bitrate: null,
+    fileSize: null,
+    artworkStorageKey: null,
+    artworkUrl: null,
+    cover: input.artworkPath ? assetUrl(input.artworkPath) : undefined,
+    lyricsStorageKey: null,
+    lyricsLanguage: null,
+    lyricsSynced: false,
+    sourceUrl: input.sourceUrl ?? null,
+    sourceId: input.sourceId ?? null,
+    createdAt: now,
+    updatedAt: now,
+    url: input.filePath,
+    localUri: input.filePath,
+    source: 'local',
+    isDownloaded: true,
+  };
 }

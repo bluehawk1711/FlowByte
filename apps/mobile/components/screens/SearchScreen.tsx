@@ -1,6 +1,6 @@
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { SongListItem } from "@/components/SongListItem";
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { Song } from "@/constants/types";
 import useAudioContext from "@/hooks/store/audioContext";
 import { client } from "@/lib/api";
@@ -64,6 +64,7 @@ const BROWSE_CATEGORIES = [
 ];
 
 export const SearchScreen: React.FC = () => {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const inputRef = useRef<TextInput>(null);
@@ -488,7 +489,7 @@ export const SearchScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.backgroundDark,
@@ -661,3 +662,5 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+

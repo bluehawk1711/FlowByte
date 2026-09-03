@@ -5,12 +5,7 @@ import type { VideoInfo } from '@flowbyte/types';
 
 export type DownloadType =
   | 'audio'
-  | 'video'
-  | 'video-only'
-  | 'merged'
-  | 'fast'
-  | 'playlist'
-  | 'playlistVideo';
+  | 'playlist';
 
 export interface MusicImportOptions {
   bitrate?: number;
@@ -30,6 +25,33 @@ export interface MusicImportResult {
   audioBitrate?: number | null;
   thumbnailPath?: string | null;
   subtitlePaths: string[];
+}
+
+export interface PlaylistItem {
+  index: number;
+  videoId: string;
+  title: string;
+  url: string;
+  thumbnail?: string | null;
+  duration?: number | null;
+  channel?: string | null;
+}
+
+export interface PlaylistInfo {
+  title: string;
+  itemCount: number;
+  items: PlaylistItem[];
+}
+
+export interface PlaylistImportProgress {
+  playlistId: string;
+  totalItems: number;
+  currentIndex: number;
+  currentTitle: string;
+  imported?: number;
+  failed?: number;
+  status: string;
+  detail: string;
 }
 
 export interface PlatformInfo {
@@ -60,6 +82,15 @@ export const readFileBytes = (path: string): Promise<string> =>
 
 export const deleteFiles = (paths: string[]): Promise<void> =>
   invoke<void>('delete_files', { paths });
+
+export const getPlaylistItems = (url: string): Promise<PlaylistInfo> =>
+  invoke<PlaylistInfo>('get_playlist_items', { url });
+
+export const startPlaylistImport = (
+  url: string,
+  opts?: MusicImportOptions,
+): Promise<string> =>
+  invoke<string>('start_playlist_import', { url, opts: opts ?? null });
 
 export const platform = (): Promise<PlatformInfo> => invoke<PlatformInfo>('platform');
 
@@ -109,6 +140,11 @@ export const onMusicImportDone = (
     const [id, result] = e.payload;
     handler(id, result);
   });
+
+export const onPlaylistImportProgress = (
+  handler: (progress: PlaylistImportProgress) => void,
+): Promise<UnlistenFn> =>
+  listen<PlaylistImportProgress>('playlist-import-progress', (e) => handler(e.payload));
 
 export const assetUrl = (path: string): string => convertFileSrc(path);
 

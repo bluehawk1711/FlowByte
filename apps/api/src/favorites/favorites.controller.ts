@@ -1,7 +1,8 @@
-import { Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FavoritesService } from './favorites.service';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator';
+import { AddFavoritesDto } from './dto';
 import type { Song } from '@flowbyte/types';
 
 @ApiTags('favorites')
@@ -9,6 +10,16 @@ import type { Song } from '@flowbyte/types';
 @Controller('favorites')
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
+
+  @Post('batch')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Add many songs to favorites in one request (multi-select)' })
+  addMany(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: AddFavoritesDto,
+  ): Promise<{ added: number }> {
+    return this.favoritesService.addMany(user.id, dto.songIds);
+  }
 
   @Get()
   @ApiOperation({ summary: 'List favorite songs' })

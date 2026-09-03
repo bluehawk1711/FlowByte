@@ -1,4 +1,4 @@
-import { AppColors } from "@/constants/theme";
+import { AppColors, useThemedStyles } from "@/constants/theme";
 import { PlaylistObj } from "@/constants/types";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
@@ -26,6 +26,7 @@ const PlaylistSelectionModal: React.FC<PlaylistSelectionModalProps> = ({
   description = "Select playlists to add songs to",
   confirmText = "Add",
 }) => {
+  const styles = useThemedStyles(createStyles);
   const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
 
   useEffect(() => {
@@ -116,7 +117,7 @@ const PlaylistSelectionModal: React.FC<PlaylistSelectionModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   playlistModalContainer: {
     backgroundColor: AppColors.backgroundCard,
     marginHorizontal: 20,
@@ -196,5 +197,7 @@ const styles = StyleSheet.create({
     color: AppColors.textPrimary,
   },
 });
+
+
 
 export default PlaylistSelectionModal;

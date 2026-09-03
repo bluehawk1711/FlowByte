@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { toast } from 'sonner';
 import type { Song } from '@flowbyte/types';
 import { client, getDeviceId, resolvePlayUrl } from '../lib/api';
 import {
@@ -116,9 +117,19 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           el.src = url;
           el.volume = volumeRef.current;
           await el.play();
-        } catch {
-          // stream resolution failed — surface via ended-like behavior
+        } catch (err) {
+          // Song isn't playable right now (no local copy + no stream).
           setPlaying(false);
+          const hasLocalCopy = Boolean(song.localUri || song.isDownloaded);
+          toast.error("This song isn't available right now", {
+            description: hasLocalCopy
+              ? 'The local file could not be played — check the file and try again.'
+              : "Couldn't reach the music server to stream this song — check that the API is running and you're online.",
+            id: `play-failed-${song.id}`,
+          });
+          if (err instanceof Error && err.message) {
+            console.warn(`[player] failed to play "${song.title}":`, err.message);
+          }
         }
       })();
     },

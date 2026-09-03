@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Music2, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
+import { Music2, Pause, Play, SkipBack, SkipForward, X } from '../../lib/icons';
 import { emit } from '@tauri-apps/api/event';
 import { formatDuration } from '../../lib/utils';
 import { hideMiniPlayer, onMiniPlayerState, type MiniPlayerState } from '../../lib/tauri';
